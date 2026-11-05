@@ -1,8 +1,9 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useCopy } from '../composables/useCopy.js'
-import { PRESETS, featureValue } from '../data.js'
-import { t } from '../i18n/index.ts'
+import { useVerticalFont } from '../composables/useVerticalFont.js'
+import { PRESETS, VERTICAL_FONT, featureValue, mebibytes } from '../data.js'
+import { useI18n } from '../i18n/index.ts'
 import FuriSwitch from './FuriSwitch.vue'
 import LevelStairs from './LevelStairs.vue'
 
@@ -12,12 +13,39 @@ const level = ref(0)
 const on = ref(true)
 const size = ref(32)
 const leading = ref(2)
+const vertical = ref(false)
 const { copied, copy } = useCopy()
+const { t, locale } = useI18n()
+const { status: verticalStatus, load: loadVertical } = useVerticalFont()
 
-const features = computed(() => featureValue(level.value, on.value))
+// Vertical text uses Dandan Vertical, fetched the first time it is picked.
+// Its furigana hang right of each column and need a line-height of 2 or more.
+watch(vertical, isVertical => {
+  if (!isVertical) return
+  loadVertical()
+  if (leading.value < 2) leading.value = 2.2
+})
+
+const features = computed(() => featureValue(level.value, on.value, vertical.value))
+const family = computed(() => (vertical.value ? VERTICAL_FONT.family : 'Dandan'))
 const css = computed(
-  () => `font-family: "Dandan";\nfont-size: ${size.value}px;\nline-height: ${leading.value.toFixed(1)};\nfont-feature-settings: ${features.value};`,
+  () =>
+    `font-family: "${family.value}";\n` +
+    (vertical.value ? 'writing-mode: vertical-rl;\n' : '') +
+    `font-size: ${size.value}px;\nline-height: ${leading.value.toFixed(1)};\nfont-feature-settings: ${features.value};`,
 )
+const verticalNote = computed(() => {
+  if (!vertical.value) return ''
+  if (verticalStatus.value === 'loading') return t('playground.verticalLoading', t('common.mb', mebibytes(VERTICAL_FONT.woff2Bytes, locale.value)))
+  if (verticalStatus.value === 'error') return t('playground.verticalFailed')
+  return ''
+})
+const textStyle = computed(() => ({
+  fontSize: size.value + 'px',
+  lineHeight: leading.value,
+  fontFeatureSettings: features.value,
+  ...(vertical.value ? { fontFamily: `"${VERTICAL_FONT.family}", var(--f-jp-plain)` } : {}),
+}))
 const edited = computed(() => text.value !== PRESETS.find(p => p.id === preset.value)?.text)
 
 // Start smaller on phones, where 32px leaves about nine characters a line.
@@ -62,6 +90,19 @@ function choose(p) {
             </p>
           </fieldset>
 
+          <fieldset class="field">
+            <legend>{{ t('playground.direction') }}</legend>
+            <div class="presets">
+              <button type="button" class="chip" :aria-pressed="!vertical" @click="vertical = false">
+                {{ t('playground.horizontal') }}
+              </button>
+              <button type="button" class="chip" :aria-pressed="vertical" @click="vertical = true">
+                {{ t('playground.vertical') }}
+              </button>
+            </div>
+            <p v-if="verticalNote" class="hint" role="status">{{ verticalNote }}</p>
+          </fieldset>
+
           <LevelStairs v-model="level" :muted="!on" compact :label="t('common.known')" />
 
           <FuriSwitch v-model="on" />
@@ -83,9 +124,10 @@ function choose(p) {
             id="pg-text"
             v-model="text"
             class="jp"
+            :class="{ vertical }"
             lang="ja"
             spellcheck="false"
-            :style="{ fontSize: size + 'px', lineHeight: leading, fontFeatureSettings: features }"
+            :style="textStyle"
           />
           <div class="editor-bar">
             <pre class="css"><code>{{ css }}</code></pre>
@@ -198,6 +240,13 @@ textarea {
   background: transparent;
   color: var(--ink);
   font-family: var(--f-jp);
+}
+
+textarea.vertical {
+  writing-mode: vertical-rl;
+  height: 440px;
+  min-height: 0;
+  resize: none;
 }
 
 textarea:focus-visible {

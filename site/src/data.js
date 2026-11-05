@@ -11,6 +11,15 @@ export const FONT = {
   candidates: 136639,
 }
 
+// The vertical build (dist/Dandan-Vertical.json), loaded only on demand.
+export const VERTICAL_FONT = {
+  family: 'Dandan Vertical',
+  woff2: 'fonts/Dandan-Vertical.woff2',
+  ttf: 'fonts/Dandan-Vertical.ttf',
+  woff2Bytes: 2053236,
+  ttfBytes: 7619188,
+}
+
 // Repository URL, shown in the header and footer when set.
 export const REPO_URL = ''
 
@@ -26,9 +35,13 @@ export const LEVELS = [
   { id: 'N1', ss: 'ss01' },
 ]
 
-/** The CSS value for a level index (0-5) with furigana on or off. */
-export function featureValue(level, on = true) {
-  if (!on) return '"calt" 0'
+/**
+ * The CSS value for a level index (0-5) with furigana on or off. Vertical text
+ * has no calt (shapers skip it there), so Dandan Vertical turns readings off
+ * with its ss10.
+ */
+export function featureValue(level, on = true, vertical = false) {
+  if (!on) return vertical ? '"ss10" 1' : '"calt" 0'
   const ss = LEVELS[level]?.ss
   return ss ? `"${ss}" 1` : 'normal'
 }

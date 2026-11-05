@@ -1,5 +1,5 @@
 <script setup>
-import { FONT, LADDER, mebibytes } from '../data.js'
+import { FONT, LADDER, VERTICAL_FONT, mebibytes } from '../data.js'
 import { useI18n } from '../i18n/index.ts'
 import CodeBlock from './CodeBlock.vue'
 
@@ -25,13 +25,28 @@ const cssCode = `@font-face {
 /* No furigana at all */
 .plain { font-feature-settings: "calt" 0; }`
 
+const verticalCode = `@font-face {
+  font-family: "Dandan Vertical";
+  src: url("Dandan-Vertical.woff2") format("woff2");
+  font-display: swap;
+}
+
+.tate {
+  writing-mode: vertical-rl;
+  font-family: "Dandan Vertical", sans-serif;
+  line-height: 2.1;          /* furigana need 2.0 or more */
+}
+
+.tate.plain { font-feature-settings: "ss10" 1; }  /* no furigana */`
+
 const htmlCode = `<p lang="ja" class="jp knows-n4">経済の状況は複雑だが、政府は対策を検討している。</p>`
 
 const cliCode = `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m dandan fetch      # base font + dictionaries (about 60 MB)
 .venv/bin/python -m dandan build      # dist/Dandan.ttf, .woff2, .json
 .venv/bin/python -m dandan build --level N4 --family "Dandan N4"
-.venv/bin/python -m dandan build-all  # all, N5, N4, N3, N2, N1
+.venv/bin/python -m dandan build --orientation vertical   # Dandan Vertical
+.venv/bin/python -m dandan build-all  # all, N5 ... N1, horizontal and vertical
 .venv/bin/python -m dandan build --dictionary common   # about 1.3 MB`
 
 // One row per switch; what each hides is in src/i18n (use.rows), in this order.
@@ -78,6 +93,9 @@ const mb = bytes => t('common.mb', mebibytes(bytes, locale.value))
           <CodeBlock :code="cssCode" label="styles.css" />
           <CodeBlock :code="htmlCode" label="index.html" />
           <p class="small" v-html="t('use.cssNote')" />
+          <h3 class="sub">{{ t('use.verticalTitle') }}</h3>
+          <CodeBlock :code="verticalCode" label="vertical.css" />
+          <p class="small" v-html="t('use.verticalNote')" />
         </div>
         <div class="col">
           <h3>{{ t('use.buildTitle') }}</h3>
@@ -95,6 +113,16 @@ const mb = bytes => t('common.mb', mebibytes(bytes, locale.value))
               <li>
                 <a class="btn" :href="FONT.ttf" download>
                   Dandan.ttf <small>{{ mb(FONT.ttfBytes) }} · {{ t('use.desktop') }}</small>
+                </a>
+              </li>
+              <li>
+                <a class="btn" :href="VERTICAL_FONT.woff2" download>
+                  Dandan-Vertical.woff2 <small>{{ mb(VERTICAL_FONT.woff2Bytes) }} · {{ t('use.vertical') }}</small>
+                </a>
+              </li>
+              <li>
+                <a class="btn" :href="VERTICAL_FONT.ttf" download>
+                  Dandan-Vertical.ttf <small>{{ mb(VERTICAL_FONT.ttfBytes) }} · {{ t('use.vertical') }}</small>
                 </a>
               </li>
             </ul>
@@ -220,6 +248,10 @@ td.ladder {
 
 h3 {
   font-size: 28px;
+}
+
+h3.sub {
+  margin-top: 16px;
 }
 
 .small {

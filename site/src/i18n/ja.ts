@@ -77,6 +77,11 @@ const ja: Messages = {
     size: '文字サイズ',
     lineHeight: '行の高さ',
     textLabel: 'Dandanで表示した日本語テキスト',
+    direction: '組方向',
+    horizontal: '横書き',
+    vertical: '縦書き',
+    verticalLoading: (size: string) => `Dandan Verticalを読み込み中（${size}）…`,
+    verticalFailed: 'Dandan Verticalを読み込めませんでした。ふりがなのない状態で表示しています。',
   },
   how: {
     eyebrow: 'しくみ',
@@ -140,9 +145,14 @@ const ja: Messages = {
     terminal: 'ターミナル（Python 3.12以上）',
     buildNote:
       '<code>--level N4</code>を付けると、そのレベルが既定の<code>calt</code>に組み込まれます。スタイリスティックセットを選べないアプリ向けです。スタイリスティックセットでレベルを上げることはできますが、下げることはできません。そのほかのオプション：<wbr><code>--weight</code>、<wbr><code>--furigana-weight</code>、<wbr><code>--scale</code>、<wbr><code>--max-words</code>',
+    verticalTitle: '縦書き',
+    // html
+    verticalNote:
+      '<code>writing-mode: vertical-rl</code>にはDandan Verticalを使います。印刷の縦組みと同じく、ふりがなは各漢字の右側に正立で並びます。<code>line-height: normal</code>は2.0で、ふりがなには2.0以上が必要です。スタイリスティックセットは横書き版と同じです。縦書きでは<code>calt</code>が適用されないため、すべての読みを消すには<code>"ss10" 1</code>を使います。',
     downloadTitle: 'ダウンロード',
     web: 'Web用',
     desktop: 'デスクトップ用',
+    vertical: '縦書き用',
     downloadNote:
       'ウェイトはRegularのみで、どのレベルも表示時に切り替えられます。ライセンスは、フォントが<a href="fonts/OFL.txt">OFL.txt</a>、読みのデータが<a href="fonts/NOTICE.txt">NOTICE.txt</a>（CC BY-SA 4.0）です。',
   },
@@ -172,8 +182,8 @@ const ja: Messages = {
         body: '「提案」の途中で改行されると、前後がそれぞれ単独でシェーピングされ、別の読みが付くことがあります。word-break: auto-phrase（Chromium、lang="ja"指定時）を使えば、文節の切れ目で改行されます。',
       },
       {
-        title: '横書き、ひらがな、JIS X 0208。',
-        body: '縦書きではシェーピングエンジンがcaltを適用しないため、ふりがなは付きません。読みはひらがなのみ、ウェイトはビルドごとに一つです。JIS\u00a0X\u00a00208にない漢字（および𠮟・塡・剝・頰）を含む語には、ふりがなが付きません。',
+        title: '縦書きは別ファイル、ひらがな、JIS X 0208。',
+        body: '縦書きには専用のDandan Verticalが必要です。縦書きではシェーピングエンジンがcaltを適用しないため、Dandanのままではふりがなが付きません。読みはひらがなのみ、ウェイトはビルドごとに一つです。JIS\u00a0X\u00a00208にない漢字（および𠮟・塡・剝・頰）を含む語には、ふりがなが付きません。',
       },
     ],
   },

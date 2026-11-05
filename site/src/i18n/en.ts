@@ -79,6 +79,11 @@ const en = {
     size: 'Size',
     lineHeight: 'Line height',
     textLabel: 'Japanese text set in Dandan',
+    direction: 'Direction',
+    horizontal: 'Horizontal',
+    vertical: 'Vertical',
+    verticalLoading: (size: string) => `Loading Dandan Vertical (${size})…`,
+    verticalFailed: 'Dandan Vertical did not load: the text shows without furigana.',
   },
   how: {
     eyebrow: 'How it works',
@@ -147,9 +152,14 @@ const en = {
     // html
     buildNote:
       '<code>--level N4</code> bakes a level into the default <code>calt</code>, for apps that never show stylistic sets; a stylistic set can still raise it, never lower it. Other options: <code>--weight</code>, <code>--furigana-weight</code>, <code>--scale</code>, <code>--max-words</code>.',
+    verticalTitle: 'Vertical text',
+    // html
+    verticalNote:
+      'For <code>writing-mode: vertical-rl</code>, use Dandan Vertical: the readings sit right of each kanji, upright, as in printed tategaki. Its <code>line-height: normal</code> is 2.0, and the furigana need 2.0 or more. The stylistic sets are the same; <code>calt</code> does not apply in vertical text, so <code>"ss10" 1</code> turns every reading off.',
     downloadTitle: 'Download',
     web: 'web',
     desktop: 'desktop',
+    vertical: 'vertical',
     // html
     downloadNote:
       'Regular weight, every level switchable at run time. Licences: <a href="fonts/OFL.txt">OFL.txt</a> for the font and <a href="fonts/NOTICE.txt">NOTICE.txt</a> for the reading data (CC BY-SA 4.0).',
@@ -180,8 +190,8 @@ const en = {
         body: 'When a line wraps inside 提案, each half is shaped alone and may get a reading of its own. word-break: auto-phrase (Chromium, with lang="ja") breaks between phrases instead.',
       },
       {
-        title: 'Horizontal, hiragana, JIS X 0208.',
-        body: 'Shapers skip calt in vertical writing, so vertical text stays plain. Readings are hiragana only, one weight per build, and words with kanji outside JIS X 0208 (plus 𠮟, 塡, 剝, 頰) get none.',
+        title: 'Two files, hiragana, JIS X 0208.',
+        body: 'Vertical text needs its own font, Dandan Vertical: Dandan itself stays plain there, since shapers skip calt in vertical writing. Readings are hiragana only, one weight per build, and words with kanji outside JIS X 0208 (plus 𠮟, 塡, 剝, 頰) get none.',
       },
     ],
   },
