@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dandan · furigana that fade as you learn</title>
+    <meta
+      name="description"
+      content="Dandan is a free Japanese font that draws furigana over kanji with OpenType ligatures, and hides the readings of the JLPT words you already know."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#151412" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content="Dandan · furigana that fade as you learn" />
+    <meta
+      property="og:description"
+      content="A Japanese font that draws its own furigana, and drops them for the JLPT words you already know."
+    />
+    <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="%BASE_URL%fonts/Dandan.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face {
+        font-family: 'Dandan';
+        src: url('%BASE_URL%fonts/Dandan.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
+    <script>
+      // Apply a saved theme before the first paint.
+      try {
+        const theme = localStorage.getItem('dandan-theme')
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <p style="padding: 2rem; font-family: system-ui, sans-serif">
+        Dandan is a Japanese font that draws furigana with OpenType ligatures. The interactive
+        specimen needs JavaScript; the font itself does not.
+        <a href="fonts/Dandan.woff2">Download Dandan.woff2</a>.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
