@@ -7,7 +7,9 @@ features nobody uses for running text, and pin the weight axis. Every glyph
 left over is room for annotated words under the 65,535-glyph limit.
 
 The kana drawn as furigana are copied from a heavier instance of the same
-variable font, so they keep their colour once scaled down.
+variable font, so they keep their colour once scaled down. The vertical build
+also copies the heavier kana's vertical forms (``vert``): small kana sit in the
+upper right of their cell and ー turns upright, as in tategaki.
 """
 
 from __future__ import annotations
@@ -83,9 +85,29 @@ def _clone(font: TTFont) -> TTFont:
     return TTFont(buffer)
 
 
+def vertical_forms(font: TTFont) -> dict[str, str]:
+    """Glyph -> its ``vert`` alternate, from the single substitutions of that feature."""
+    gsub = font["GSUB"].table
+    indices: set[int] = set()
+    for record in gsub.FeatureList.FeatureRecord:
+        if record.FeatureTag == "vert":
+            indices.update(record.Feature.LookupListIndex)
+    mapping: dict[str, str] = {}
+    for index in sorted(indices):
+        lookup = gsub.LookupList.Lookup[index]
+        for subtable in lookup.SubTable:
+            if lookup.LookupType == 7:
+                subtable = subtable.ExtSubTable
+            if hasattr(subtable, "mapping"):
+                for source, target in subtable.mapping.items():
+                    mapping.setdefault(source, target)
+    return mapping
+
+
 @cache
-def _prepared(weight: int, furigana_weight: int) -> bytes:
-    path = CACHE / f"base-w{weight}-f{furigana_weight}.ttf"
+def _prepared(weight: int, furigana_weight: int, vertical: bool = False) -> bytes:
+    suffix = "-vert" if vertical else ""
+    path = CACHE / f"base-w{weight}-f{furigana_weight}{suffix}.ttf"
     if path.exists():
         return path.read_bytes()
     variable = TTFont(require("NotoSansJP-VF.ttf"))
@@ -95,7 +117,7 @@ def _prepared(weight: int, furigana_weight: int) -> bytes:
 
     font = instancer.instantiateVariableFont(_clone(variable), {"wght": weight})
     heavy = instancer.instantiateVariableFont(variable, {"wght": furigana_weight})
-    _add_furigana_kana(font, heavy)
+    _add_furigana_kana(font, heavy, vertical)
     font["post"].formatType = 2.0  # keep glyph names in the cached copy
     font["post"].extraNames = []
     font["post"].mapping = {}
@@ -106,32 +128,47 @@ def _prepared(weight: int, furigana_weight: int) -> bytes:
     return buffer.getvalue()
 
 
-def _add_furigana_kana(font: TTFont, heavy: TTFont) -> None:
-    """Copy the kana outlines of the heavier instance as unencoded glyphs."""
+def _add_furigana_kana(font: TTFont, heavy: TTFont, vertical: bool = False) -> None:
+    """Copy the kana outlines of the heavier instance as unencoded glyphs.
+
+    With ``vertical``, the kana's vertical forms are copied too, under
+    ``furi.<vertical form name>``: the instances keep the variable font's glyph
+    names, but each one is looked up through its own cmap and GSUB anyway.
+    """
     cmap = font.getBestCmap()
     heavy_cmap = heavy.getBestCmap()
     order = font.getGlyphOrder()
     glyf, hmtx = font["glyf"], font["hmtx"]
     vmtx = font["vmtx"] if "vmtx" in font else None
     heavy_glyf = heavy["glyf"]
+    # (name in this font, name in the heavier instance)
+    sources: list[tuple[str, str]] = []
     for code in sorted(kana_codepoints() | {0x30FC}):
-        if code not in cmap or code not in heavy_cmap:
-            continue
-        source = heavy_glyf[heavy_cmap[code]]
+        if code in cmap and code in heavy_cmap:
+            sources.append((cmap[code], heavy_cmap[code]))
+    if vertical:
+        forms, heavy_forms = vertical_forms(font), vertical_forms(heavy)
+        sources += [
+            (forms[name], heavy_forms[heavy_name])
+            for name, heavy_name in list(sources)
+            if name in forms and heavy_name in heavy_forms
+        ]
+    for source_name, heavy_name in sources:
+        source = heavy_glyf[heavy_name]
         if source.isComposite():
             continue
-        name = FURIGANA_PREFIX + cmap[code]
+        name = FURIGANA_PREFIX + source_name
         glyph = source.__class__()
         glyph.__dict__.update(source.__dict__)
         order.append(name)
         glyf.glyphs[name] = glyph
-        hmtx.metrics[name] = heavy["hmtx"][heavy_cmap[code]]
+        hmtx.metrics[name] = heavy["hmtx"][heavy_name]
         if vmtx is not None:
-            vmtx.metrics[name] = vmtx[cmap[code]]
+            vmtx.metrics[name] = vmtx[source_name]
     font.setGlyphOrder(order)
     glyf.glyphOrder = order
 
 
-def load_base(weight: int = 400, furigana_weight: int = 600) -> TTFont:
-    """Return a fresh copy of the prepared base font."""
-    return TTFont(io.BytesIO(_prepared(weight, furigana_weight)))
+def load_base(weight: int = 400, furigana_weight: int = 600, vertical: bool = False) -> TTFont:
+    """Return a fresh copy of the prepared base font (with vertical kana forms for the vertical build)."""
+    return TTFont(io.BytesIO(_prepared(weight, furigana_weight, vertical)))
