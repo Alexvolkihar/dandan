@@ -89,6 +89,13 @@ python3 -m http.server 8000     # from the repository root, after building
 `demo/index.html` loads `dist/Dandan.woff2` and has a level selector (stylistic sets) and a furigana toggle
 (`calt`). The text is editable.
 
+### Website
+
+`site/` is the landing page: a Vue 3 + Vite static site with a JLPT level slider, a playground, the switches
+and the downloads. It ships `Dandan.woff2` and `Dandan.ttf` in `site/public/fonts` (refresh them with
+`pnpm fonts` after a build). See [site/DEPLOY.md](site/DEPLOY.md) to run it and deploy it to GitHub Pages or
+Cloudflare Pages.
+
 ## How it works
 
 ```
