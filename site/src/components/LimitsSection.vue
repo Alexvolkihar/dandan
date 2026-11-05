@@ -60,6 +60,7 @@ const limits = [
 
 .item {
   display: grid;
+  align-content: start;
   gap: 6px;
   padding: 20px 0;
   border-top: 1px solid var(--rule);
