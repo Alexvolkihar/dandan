@@ -16,13 +16,14 @@ export const REPO_URL = ''
 
 // Steps of the level control. `ss` is the stylistic set that hides the
 // readings of that level and every easier one.
+// Their labels live in src/i18n (levels.none, levels.valueText).
 export const LEVELS = [
-  { id: 'all', short: 'None', ss: null, known: 'no JLPT level yet', hides: 'nothing: every word keeps its reading' },
-  { id: 'N5', short: 'N5', ss: 'ss05', known: 'N5', hides: 'N5 words' },
-  { id: 'N4', short: 'N4', ss: 'ss04', known: 'N5 and N4', hides: 'N5 and N4 words' },
-  { id: 'N3', short: 'N3', ss: 'ss03', known: 'N5 to N3', hides: 'N5 to N3 words' },
-  { id: 'N2', short: 'N2', ss: 'ss02', known: 'N5 to N2', hides: 'N5 to N2 words' },
-  { id: 'N1', short: 'N1', ss: 'ss01', known: 'every JLPT level', hides: 'every word on a JLPT list' },
+  { id: 'all', ss: null },
+  { id: 'N5', ss: 'ss05' },
+  { id: 'N4', ss: 'ss04' },
+  { id: 'N3', ss: 'ss03' },
+  { id: 'N2', ss: 'ss02' },
+  { id: 'N1', ss: 'ss01' },
 ]
 
 /** The CSS value for a level index (0-5) with furigana on or off. */
@@ -57,33 +58,27 @@ export const HERO_WORDS = HERO_LINES.flatMap(line => line.words)
 export const LADDER = [['勉強', 'N5'], ['経済', 'N4'], ['状況', 'N3'], ['対策', 'N2'], ['再会', 'N1']]
 
 // Playground presets: short texts of growing difficulty, written for this page.
+// Their names and hints live in src/i18n (playground.presets).
 export const PRESETS = [
   {
     id: 'first-steps',
-    label: 'First steps',
-    hint: 'mostly N5',
     text: '私の部屋は小さいですが、窓から公園が見えます。\n週末は友達と映画を見に行く約束をしました。',
   },
   {
     id: 'errands',
-    label: 'Errands',
-    hint: 'N5 to N3',
     text: '駅の近くに新しい料理屋ができたので、来週の予定を確認した。\n冬の朝、凍えた指で手紙を書いた。',
   },
   {
     id: 'news',
-    label: 'News',
-    hint: 'N3 to N1 and beyond',
     text: '政府は物価の上昇を抑えるため、新たな経済対策を発表した。\n専門家は、少子化が地域社会に深刻な影響を及ぼすと指摘している。',
   },
   {
     id: 'prose',
-    label: 'Prose',
-    hint: 'literary, many off-list words',
     text: '夕暮れの港に汽笛が響き、鴎の群れが静かに旋回していた。\n縁側に座って、祖母は庭の紫陽花を眺めていた。\n段々と寒くなり、山の木々は赤く色づき始めた。',
   },
 ]
 
-export function mebibytes(bytes) {
-  return (bytes / 1048576).toFixed(1)
+/** A size in MiB with one decimal, in the locale's number format (1.8, 1,8). */
+export function mebibytes(bytes, locale = 'en') {
+  return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(bytes / 1048576)
 }

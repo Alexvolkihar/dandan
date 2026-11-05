@@ -1,56 +1,42 @@
 <script setup>
+import { computed } from 'vue'
 import { FONT } from '../data.js'
+import { useI18n } from '../i18n/index.ts'
 
-const stages = [
-  {
-    tag: 'Input',
-    css: '"calt" 0',
-    title: 'Plain text',
-    body: 'Unicode, nothing else. The browser cuts it into runs by script before shaping: 日本語 · を · 勉強.',
-  },
-  {
-    tag: 'calt · words',
-    css: 'normal',
-    title: 'Longest match',
-    body: 'Each run of two or more kanji is a ligature. The longest is tried first, so 日本語 is one glyph, never 日本 + 語.',
-  },
-  {
-    tag: 'ss05 · hide N5',
-    css: '"ss05" 1',
-    title: 'Known words go bare',
-    body: '勉強 is an N5 word: after the match, ss05 swaps its glyph back to plain 勉 and 強. 日本語 is not on any list and keeps its reading.',
-  },
-]
+const { t, locale } = useI18n()
 
-const n = new Intl.NumberFormat('en')
-const reserve = 65535 - FONT.totalGlyphs
+// Feature settings shown for each stage of 日本語を勉強; the copy is in src/i18n (how.stages).
+const STAGE_CSS = ['"calt" 0', 'normal', '"ss05" 1']
+const MAX_GLYPHS = 65535
+
+const n = computed(() => new Intl.NumberFormat(locale.value))
+const reserve = MAX_GLYPHS - FONT.totalGlyphs
 const budget = [
-  { label: 'Base font', value: FONT.baseGlyphs, cls: 'base' },
-  { label: 'Annotated words', value: FONT.annotated, cls: 'words' },
-  { label: 'Free', value: reserve, cls: 'free' },
+  { key: 'base', value: FONT.baseGlyphs },
+  { key: 'words', value: FONT.annotated },
+  { key: 'free', value: reserve },
 ]
+const budgetLabel = computed(() =>
+  t('how.budgetAria', n.value.format(FONT.baseGlyphs), n.value.format(FONT.annotated), n.value.format(reserve), n.value.format(MAX_GLYPHS)),
+)
 </script>
 
 <template>
   <section id="how" class="section" aria-labelledby="how-title">
     <div class="wrap">
       <div class="section-head">
-        <p class="eyebrow"><span class="num">02</span> · How it works</p>
-        <h2 id="how-title">One glyph per word, read and drawn in advance.</h2>
-        <p>
-          Every common kanji word, with its reading, is a glyph of its own: the kanji, with the kana at half size
-          above them. OpenType rules pick that glyph when the word appears, and stylistic sets put the plain kanji
-          back for the words you know.
-        </p>
+        <p class="eyebrow"><span class="num">02</span> · {{ t('how.eyebrow') }}</p>
+        <h2 id="how-title">{{ t('how.title') }}</h2>
+        <p>{{ t('how.intro') }}</p>
       </div>
 
-      <ol class="flow" aria-label="What happens to 日本語を勉強">
-        <li v-for="(stage, i) in stages" :key="stage.tag" class="stage">
+      <ol class="flow" :aria-label="t('how.flow')">
+        <li v-for="(stage, i) in t('how.stages')" :key="i" class="stage">
           <div class="stage-top">
             <span class="step-no">{{ i + 1 }}</span>
             <code>{{ stage.tag }}</code>
           </div>
-          <p class="glyphs jp" lang="ja" :style="{ fontFeatureSettings: stage.css }">日本語を勉強</p>
+          <p class="glyphs jp" lang="ja" :style="{ fontFeatureSettings: STAGE_CSS[i] }">日本語を勉強</p>
           <h3>{{ stage.title }}</h3>
           <p class="body">{{ stage.body }}</p>
         </li>
@@ -58,42 +44,23 @@ const budget = [
 
       <div class="details">
         <div class="lookups">
-          <h3>Rules, in order</h3>
+          <h3>{{ t('how.rulesTitle') }}</h3>
           <ol>
-            <li><code>words</code> ligatures of two or more kanji, longest first.</li>
-            <li>
-              <code>okurigana</code> a lone kanji before a given kana takes that word's reading (食 + べ: た). Browsers
-              shape kanji and kana apart, so only other shapers see this one.
-            </li>
-            <li><code>kanji</code> a lone kanji takes its one unambiguous reading (見 : み).</li>
-            <li>
-              <code>hide N5</code> … <code>hide N1</code> turn the glyph of a listed word back into its plain kanji.
-              <code>ss05</code> runs the first, <code>ss01</code> all five.
-            </li>
+            <!-- Static copy from src/i18n, never user input. -->
+            <li v-for="(rule, i) in t('how.rules')" :key="i" v-html="rule" />
           </ol>
-          <p class="note">
-            A reading is kept only when it clearly wins: lone 食 can be た, く or しょく, so it stays bare. When a reading
-            fits over each kanji it sits there (日 本 語); otherwise it is centred and condensed over the word, so it never
-            spills into the next one.
-          </p>
+          <p class="note">{{ t('how.note') }}</p>
         </div>
 
         <div class="budget">
-          <h3>The glyph budget</h3>
-          <p>
-            A font holds at most 65,535 glyphs. The dictionary offers {{ n.format(FONT.candidates) }} words; JLPT words go
-            first, then common JMdict words by frequency, until the font is full.
-          </p>
-          <div
-            class="bar"
-            role="img"
-            :aria-label="`${n.format(FONT.baseGlyphs)} base glyphs, ${n.format(FONT.annotated)} annotated words, ${reserve} free, out of 65,535`"
-          >
-            <span v-for="part in budget" :key="part.cls" :class="part.cls" :style="{ flexGrow: part.value }" />
+          <h3>{{ t('how.budgetTitle') }}</h3>
+          <p>{{ t('how.budget', n.format(MAX_GLYPHS), n.format(FONT.candidates)) }}</p>
+          <div class="bar" role="img" :aria-label="budgetLabel">
+            <span v-for="part in budget" :key="part.key" :class="part.key" :style="{ flexGrow: part.value }" />
           </div>
           <dl class="legend">
-            <div v-for="part in budget" :key="part.cls">
-              <dt><span class="swatch" :class="part.cls" />{{ part.label }}</dt>
+            <div v-for="part in budget" :key="part.key">
+              <dt><span class="swatch" :class="part.key" />{{ t(`how.budgetParts.${part.key}`) }}</dt>
               <dd>{{ n.format(part.value) }}</dd>
             </div>
           </dl>
@@ -238,7 +205,7 @@ const budget = [
   font-variant-numeric: tabular-nums;
 }
 
-.lookups li code {
+.lookups li :deep(code) {
   margin-right: 4px;
 }
 

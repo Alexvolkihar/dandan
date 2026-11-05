@@ -1,5 +1,6 @@
 <script setup>
 import { FONT, LADDER, mebibytes } from '../data.js'
+import { useI18n } from '../i18n/index.ts'
 import CodeBlock from './CodeBlock.vue'
 
 const cssCode = `@font-face {
@@ -33,48 +34,39 @@ const cliCode = `python3 -m venv .venv && .venv/bin/pip install -r requirements.
 .venv/bin/python -m dandan build-all  # all, N5, N4, N3, N2, N1
 .venv/bin/python -m dandan build --dictionary common   # about 1.3 MB`
 
-const rows = [
-  { sw: 'default', css: 'normal', hides: 'Nothing. Every word in the font shows its reading.' },
-  { sw: 'ss05', css: '"ss05" 1', hides: 'N5 words' },
-  { sw: 'ss04', css: '"ss04" 1', hides: 'N5 and N4' },
-  { sw: 'ss03', css: '"ss03" 1', hides: 'N5 to N3' },
-  { sw: 'ss02', css: '"ss02" 1', hides: 'N5 to N2' },
-  { sw: 'ss01', css: '"ss01" 1', hides: 'Every JLPT word; only off-list words keep a reading' },
-  { sw: 'calt 0', css: '"calt" 0', hides: 'Every reading (same as font-variant-ligatures: no-contextual)' },
-]
+// One row per switch; what each hides is in src/i18n (use.rows), in this order.
+const rows = ['normal', '"ss05" 1', '"ss04" 1', '"ss03" 1', '"ss02" 1', '"ss01" 1', '"calt" 0']
 const ladder = LADDER.map(([word]) => word).join('・')
+
+const { t, locale } = useI18n()
+const mb = bytes => t('common.mb', mebibytes(bytes, locale.value))
 </script>
 
 <template>
   <section id="use" class="section" aria-labelledby="use-title">
     <div class="wrap">
       <div class="section-head">
-        <p class="eyebrow"><span class="num">03</span> · Use it</p>
-        <h2 id="use-title">One font file, seven switches.</h2>
-        <p>
-          Load the WOFF2 like any web font and pick a level with <code>font-feature-settings</code>. The switches work
-          wherever stylistic sets do: CSS, InDesign, Word.
-        </p>
+        <p class="eyebrow"><span class="num">03</span> · {{ t('use.eyebrow') }}</p>
+        <h2 id="use-title">{{ t('use.title') }}</h2>
+        <!-- Static copy from src/i18n (here and below), never user input. -->
+        <p v-html="t('use.intro')" />
       </div>
 
       <div class="table-wrap">
         <table>
-          <caption class="sr-only">
-            Feature switches and what they hide, with 勉強 (N5), 経済 (N4), 状況 (N3), 対策 (N2) and 再会 (N1) rendered
-            in Dandan
-          </caption>
+          <caption class="sr-only">{{ t('use.caption') }}</caption>
           <thead>
             <tr>
-              <th scope="col">Switch</th>
-              <th scope="col">Hides the readings of</th>
+              <th scope="col">{{ t('use.thSwitch') }}</th>
+              <th scope="col">{{ t('use.thHides') }}</th>
               <th scope="col">N5 · N4 · N3 · N2 · N1</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :key="row.sw">
-              <th scope="row"><code>{{ row.css }}</code></th>
-              <td>{{ row.hides }}</td>
-              <td class="jp ladder" lang="ja" :style="{ fontFeatureSettings: row.css }">{{ ladder }}</td>
+            <tr v-for="(css, i) in rows" :key="css">
+              <th scope="row"><code>{{ css }}</code></th>
+              <td>{{ t('use.rows')[i] }}</td>
+              <td class="jp ladder" lang="ja" :style="{ fontFeatureSettings: css }">{{ ladder }}</td>
             </tr>
           </tbody>
         </table>
@@ -85,39 +77,28 @@ const ladder = LADDER.map(([word]) => word).join('・')
           <h3>CSS</h3>
           <CodeBlock :code="cssCode" label="styles.css" />
           <CodeBlock :code="htmlCode" label="index.html" />
-          <p class="small">
-            The furigana reach 1.34 em above the baseline. Below a line-height of about 1.6 the first line can be
-            clipped by <code>overflow: hidden</code>; below 1.5 the readings touch the line above.
-          </p>
+          <p class="small" v-html="t('use.cssNote')" />
         </div>
         <div class="col">
-          <h3>Build your own</h3>
-          <CodeBlock :code="cliCode" label="Terminal, Python 3.12+" />
-          <p class="small">
-            <code>--level N4</code> bakes a level into the default <code>calt</code>, for apps that never show stylistic
-            sets; a stylistic set can still raise it, never lower it. Other options: <code>--weight</code>,
-            <code>--furigana-weight</code>, <code>--scale</code>, <code>--max-words</code>.
-          </p>
+          <h3>{{ t('use.buildTitle') }}</h3>
+          <CodeBlock :code="cliCode" :label="t('use.terminal')" />
+          <p class="small" v-html="t('use.buildNote')" />
 
           <div id="download" class="downloads">
-            <h3>Download</h3>
+            <h3>{{ t('use.downloadTitle') }}</h3>
             <ul>
               <li>
                 <a class="btn btn-solid" :href="FONT.woff2" download>
-                  Dandan.woff2 <small>{{ mebibytes(FONT.woff2Bytes) }} MB · web</small>
+                  Dandan.woff2 <small>{{ mb(FONT.woff2Bytes) }} · {{ t('use.web') }}</small>
                 </a>
               </li>
               <li>
                 <a class="btn" :href="FONT.ttf" download>
-                  Dandan.ttf <small>{{ mebibytes(FONT.ttfBytes) }} MB · desktop</small>
+                  Dandan.ttf <small>{{ mb(FONT.ttfBytes) }} · {{ t('use.desktop') }}</small>
                 </a>
               </li>
             </ul>
-            <p class="small">
-              Regular weight, every level switchable at run time. Licences:
-              <a href="fonts/OFL.txt">OFL.txt</a> for the font and <a href="fonts/NOTICE.txt">NOTICE.txt</a> for the
-              reading data (CC BY-SA 4.0).
-            </p>
+            <p class="small" v-html="t('use.downloadNote')" />
           </div>
         </div>
       </div>

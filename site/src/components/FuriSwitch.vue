@@ -1,13 +1,14 @@
 <script setup>
+import { t } from '../i18n/index.ts'
+
 const on = defineModel({ type: Boolean, default: true })
-defineProps({ label: { type: String, default: 'Furigana' } })
 </script>
 
 <template>
   <button type="button" role="switch" class="switch" :aria-checked="on" @click="on = !on">
-    <span class="switch-label">{{ label }}</span>
+    <span class="switch-label">{{ t('common.furigana') }}</span>
     <span class="knob-track" aria-hidden="true"><span class="knob" /></span>
-    <span class="state" aria-hidden="true">{{ on ? 'On' : 'Off' }}</span>
+    <span class="state" aria-hidden="true">{{ on ? t('common.on') : t('common.off') }}</span>
   </button>
 </template>
 

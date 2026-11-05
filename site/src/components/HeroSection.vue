@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useCopy } from '../composables/useCopy.js'
 import { useFontStatus } from '../composables/useFontStatus.js'
 import { FONT, HERO_LINES, HERO_WORDS, LEVELS, featureValue, mebibytes } from '../data.js'
+import { useI18n } from '../i18n/index.ts'
 import FadingText from './FadingText.vue'
 import FuriSwitch from './FuriSwitch.vue'
 import LevelStairs from './LevelStairs.vue'
@@ -11,6 +12,8 @@ const level = ref(0)
 const on = ref(true)
 const fontStatus = useFontStatus()
 const { copied, copy } = useCopy()
+const { t, locale } = useI18n()
+const size = computed(() => t('common.mb', mebibytes(FONT.woff2Bytes, locale.value)))
 
 const lines = HERO_LINES.map(line => line.text)
 const features = computed(() => featureValue(level.value, on.value))
@@ -20,9 +23,9 @@ const css = computed(() => `font-feature-settings: ${features.value};`)
 const shown = computed(() => (on.value ? HERO_WORDS.filter(([, step]) => step > level.value).length : 0))
 const hiddenNow = computed(() => HERO_WORDS.filter(([, step]) => step === level.value).map(([word]) => word))
 const status = computed(() => {
-  if (!on.value) return 'calt is off, so every reading is gone.'
-  if (level.value === 0) return 'Climb the stairs to drop the readings you already know.'
-  return `${LEVELS[level.value].id} hides`
+  if (!on.value) return t('hero.statusOff')
+  if (level.value === 0) return t('hero.statusStart')
+  return t('hero.statusHides', LEVELS[level.value].id)
 })
 </script>
 
@@ -30,23 +33,20 @@ const status = computed(() => {
   <section class="hero" aria-labelledby="hero-title">
     <div class="wrap head">
       <div class="title">
-        <p class="eyebrow">A free Japanese font · OFL 1.1</p>
-        <h1 id="hero-title">Furigana that fade <em>as you learn.</em></h1>
+        <p class="eyebrow">{{ t('hero.eyebrow') }}</p>
+        <h1 id="hero-title">{{ t('hero.title') }}<em>{{ t('hero.titleEm') }}</em></h1>
       </div>
       <div class="intro">
-        <p class="lede">
-          Dandan draws readings over kanji by itself: plain text in, furigana out, with no
-          <code>&lt;ruby&gt;</code> and no script. Tell it the JLPT level you know and those words lose
-          their readings, one step at a time.
-        </p>
+        <!-- Static copy from src/i18n, never user input. -->
+        <p class="lede" v-html="t('hero.lede')" />
         <div class="actions">
           <a class="btn btn-solid" :href="FONT.woff2" download>
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            Download the font <small>WOFF2 · {{ mebibytes(FONT.woff2Bytes) }} MB</small>
+            {{ t('hero.download') }} <small>WOFF2 · {{ size }}</small>
           </a>
-          <a class="btn" href="#playground">Try your own text</a>
+          <a class="btn" href="#playground">{{ t('hero.try') }}</a>
         </div>
       </div>
     </div>
@@ -54,12 +54,12 @@ const status = computed(() => {
     <div class="wrap">
       <figure class="specimen" aria-labelledby="specimen-caption">
         <div class="specimen-bar">
-          <span id="specimen-caption" class="eyebrow">Specimen · Dandan Regular</span>
+          <span id="specimen-caption" class="eyebrow">{{ t('hero.specimen') }}</span>
           <span class="font-status" :data-status="fontStatus" role="status">
             <span class="dot" aria-hidden="true" />
-            <template v-if="fontStatus === 'loading'">Loading the font ({{ mebibytes(FONT.woff2Bytes) }} MB)…</template>
-            <template v-else-if="fontStatus === 'ready'">Font loaded</template>
-            <template v-else>The font did not load: showing a fallback without furigana</template>
+            <template v-if="fontStatus === 'loading'">{{ t('hero.loading', size) }}</template>
+            <template v-else-if="fontStatus === 'ready'">{{ t('hero.loaded') }}</template>
+            <template v-else>{{ t('hero.failed') }}</template>
           </span>
         </div>
 
@@ -68,10 +68,10 @@ const status = computed(() => {
         </div>
 
         <div class="controls">
-          <LevelStairs v-model="level" :muted="!on" label="I already know" />
+          <LevelStairs v-model="level" :muted="!on" :label="t('common.known')" />
           <p class="tally">
             <span class="big"><span class="num">{{ shown }}</span><span class="of">/{{ HERO_WORDS.length }}</span></span>
-            <span class="tally-label">words still show a reading</span>
+            <span class="tally-label">{{ t('hero.tally', shown) }}</span>
           </p>
           <div class="readout">
             <FuriSwitch v-model="on" />
@@ -84,7 +84,7 @@ const status = computed(() => {
             <div class="css-line">
               <code>{{ css }}</code>
               <button type="button" class="chip" @click="copy(css)">
-                {{ copied ? 'Copied' : 'Copy CSS' }}
+                {{ copied ? t('common.copied') : t('common.copyCss') }}
               </button>
             </div>
           </div>

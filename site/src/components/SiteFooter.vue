@@ -1,5 +1,6 @@
 <script setup>
 import { REPO_URL } from '../data.js'
+import { t } from '../i18n/index.ts'
 </script>
 
 <template>
@@ -7,12 +8,12 @@ import { REPO_URL } from '../data.js'
     <div class="wrap row">
       <p class="sign">
         <span class="jp" lang="ja">段々</span>
-        <span>Dandan, step by step. 2026, Alexis MABANZA.</span>
+        <span>{{ t('footer.sign') }}</span>
       </p>
       <p class="meta">
-        Set in Dandan and Instrument Serif.
-        <a v-if="REPO_URL" :href="REPO_URL">Source code</a>
-        <a href="#top">Back to top</a>
+        {{ t('footer.setIn') }}
+        <a v-if="REPO_URL" :href="REPO_URL">{{ t('footer.source') }}</a>
+        <a href="#top">{{ t('footer.top') }}</a>
       </p>
     </div>
   </footer>

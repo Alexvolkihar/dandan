@@ -7,10 +7,11 @@ import PlaygroundSection from './components/PlaygroundSection.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import SiteHeader from './components/SiteHeader.vue'
 import UseSection from './components/UseSection.vue'
+import { t } from './i18n/index.ts'
 </script>
 
 <template>
-  <a class="skip" href="#main">Skip to content</a>
+  <a class="skip" href="#main">{{ t('skip') }}</a>
   <div id="top" />
   <SiteHeader />
   <main id="main">

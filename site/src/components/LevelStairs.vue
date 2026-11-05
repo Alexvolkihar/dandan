@@ -1,24 +1,20 @@
 <script setup>
 import { computed, useId } from 'vue'
 import { LEVELS } from '../data.js'
+import { t } from '../i18n/index.ts'
 
 // A range input (0-5) drawn as a flight of stairs: each step up hides the
 // readings of one more JLPT level. The native input stays on top, invisible,
 // so pointer, touch and keyboard all work as for any slider.
 const model = defineModel({ type: Number, default: 0 })
 const props = defineProps({
-  label: { type: String, default: 'I already know' },
+  label: { type: String, required: true },
   muted: { type: Boolean, default: false },
   compact: { type: Boolean, default: false },
 })
 
 const id = useId()
-const valueText = computed(() => {
-  const level = LEVELS[model.value]
-  return model.value === 0
-    ? 'None: every reading shown'
-    : `${level.id}: readings of ${level.hides} hidden`
-})
+const valueText = computed(() => t('levels.valueText')[model.value])
 </script>
 
 <template>
@@ -33,7 +29,7 @@ const valueText = computed(() => {
           :class="{ on: i <= model, current: i === model }"
           :style="{ '--i': i }"
         >
-          <span class="step-name">{{ level.short }}</span>
+          <span class="step-name">{{ i === 0 ? t('levels.none') : level.id }}</span>
           <span class="tread" />
         </div>
       </div>

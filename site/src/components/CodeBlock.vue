@@ -1,5 +1,6 @@
 <script setup>
 import { useCopy } from '../composables/useCopy.js'
+import { t } from '../i18n/index.ts'
 
 const props = defineProps({
   code: { type: String, required: true },
@@ -12,7 +13,7 @@ const { copied, copy } = useCopy()
   <div class="code">
     <div class="code-bar">
       <span>{{ props.label }}</span>
-      <button type="button" class="chip" @click="copy(props.code)">{{ copied ? 'Copied' : 'Copy' }}</button>
+      <button type="button" class="chip" @click="copy(props.code)">{{ copied ? t('common.copied') : t('common.copy') }}</button>
     </div>
     <pre tabindex="0" :aria-label="props.label"><code>{{ props.code }}</code></pre>
   </div>

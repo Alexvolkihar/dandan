@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useCopy } from '../composables/useCopy.js'
 import { PRESETS, featureValue } from '../data.js'
+import { t } from '../i18n/index.ts'
 import FuriSwitch from './FuriSwitch.vue'
 import LevelStairs from './LevelStairs.vue'
 
@@ -34,18 +35,16 @@ function choose(p) {
   <section id="playground" class="section" aria-labelledby="playground-title">
     <div class="wrap">
       <div class="section-head">
-        <p class="eyebrow"><span class="num">01</span> · Playground</p>
-        <h2 id="playground-title">Type anything. The font does the rest.</h2>
-        <p>
-          The box below is a plain <code>&lt;textarea&gt;</code> set in Dandan. Paste a paragraph, pick the level
-          you read at, and watch which words keep their readings.
-        </p>
+        <p class="eyebrow"><span class="num">01</span> · {{ t('playground.eyebrow') }}</p>
+        <h2 id="playground-title">{{ t('playground.title') }}</h2>
+        <!-- Static copy from src/i18n, never user input. -->
+        <p v-html="t('playground.intro')" />
       </div>
 
       <div class="board">
         <div class="panel">
           <fieldset class="field">
-            <legend>Sample text</legend>
+            <legend>{{ t('playground.sample') }}</legend>
             <div class="presets">
               <button
                 v-for="p in PRESETS"
@@ -55,29 +54,31 @@ function choose(p) {
                 :aria-pressed="preset === p.id && !edited"
                 @click="choose(p)"
               >
-                {{ p.label }}
+                {{ t(`playground.presets.${p.id}.label`) }}
               </button>
             </div>
-            <p class="hint">{{ PRESETS.find(p => p.id === preset)?.hint }}{{ edited ? ' · edited' : '' }}</p>
+            <p class="hint">
+              {{ t(`playground.presets.${preset}.hint`) }}{{ edited ? ` · ${t('playground.edited')}` : '' }}
+            </p>
           </fieldset>
 
-          <LevelStairs v-model="level" :muted="!on" compact label="I already know" />
+          <LevelStairs v-model="level" :muted="!on" compact :label="t('common.known')" />
 
           <FuriSwitch v-model="on" />
 
           <div class="field">
-            <label for="pg-size">Size <output for="pg-size">{{ size }} px</output></label>
+            <label for="pg-size">{{ t('playground.size') }} <output for="pg-size">{{ size }} px</output></label>
             <input id="pg-size" v-model.number="size" type="range" min="16" max="72" step="1" />
           </div>
 
           <div class="field">
-            <label for="pg-leading">Line height <output for="pg-leading">{{ leading.toFixed(1) }}</output></label>
+            <label for="pg-leading">{{ t('playground.lineHeight') }} <output for="pg-leading">{{ leading.toFixed(1) }}</output></label>
             <input id="pg-leading" v-model.number="leading" type="range" min="1.7" max="2.6" step="0.1" />
           </div>
         </div>
 
         <div class="editor">
-          <label for="pg-text" class="sr-only">Japanese text set in Dandan</label>
+          <label for="pg-text" class="sr-only">{{ t('playground.textLabel') }}</label>
           <textarea
             id="pg-text"
             v-model="text"
@@ -88,7 +89,7 @@ function choose(p) {
           />
           <div class="editor-bar">
             <pre class="css"><code>{{ css }}</code></pre>
-            <button type="button" class="chip" @click="copy(css)">{{ copied ? 'Copied' : 'Copy CSS' }}</button>
+            <button type="button" class="chip" @click="copy(css)">{{ copied ? t('common.copied') : t('common.copyCss') }}</button>
           </div>
         </div>
       </div>

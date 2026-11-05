@@ -1,50 +1,36 @@
+<script setup>
+import { t } from '../i18n/index.ts'
+</script>
+
 <template>
   <section id="credits" class="section" aria-labelledby="credits-title">
     <div class="wrap">
       <div class="section-head">
-        <p class="eyebrow"><span class="num">05</span> · Credits</p>
-        <h2 id="credits-title">Built on open work.</h2>
+        <p class="eyebrow"><span class="num">05</span> · {{ t('credits.eyebrow') }}</p>
+        <h2 id="credits-title">{{ t('credits.title') }}</h2>
       </div>
+      <!-- Static copy from src/i18n, never user input. -->
       <div class="cols">
         <div>
-          <h3>Thanks to</h3>
+          <h3>{{ t('credits.thanks') }}</h3>
           <ul>
-            <li>
-              <a href="https://furifont.antfu.me/">Furifont</a> by Anthony Fu, the inspiration: furigana drawn by the font
-              itself, and the finding that browsers shape kanji and kana apart. Dandan is a separate implementation and
-              shares no code with it.
-            </li>
-            <li><a href="https://fonts.google.com/noto/specimen/Noto+Sans+JP">Noto Sans JP</a> by Adobe and Google, the outlines.</li>
-            <li><a href="https://www.edrdg.org/jmdict/j_jmdict.html">JMdict</a> by the Electronic Dictionary Research and Development Group, the words and readings.</li>
-            <li><a href="https://github.com/Doublevil/JmdictFurigana">JmdictFurigana</a> by Doublevil, which kana go over which kanji.</li>
-            <li>
-              <a href="https://github.com/stephenmk/yomitan-jlpt-vocab">yomitan-jlpt-vocab</a> by stephenmk, from Jonathan
-              Waller's <a href="http://www.tanos.co.uk/jlpt/">JLPT lists</a>, the levels.
-            </li>
-            <li><a href="https://github.com/fonttools/fonttools">fontTools</a> and <a href="https://harfbuzz.github.io/">HarfBuzz</a>, to build and test it.</li>
+            <li v-for="(item, i) in t('credits.items')" :key="i" v-html="item" />
           </ul>
         </div>
         <div>
-          <h3>Licences</h3>
+          <h3>{{ t('credits.licences') }}</h3>
           <dl>
             <div>
-              <dt>Font</dt>
-              <dd>
-                <a href="fonts/OFL.txt">SIL Open Font License 1.1</a>. Derived from Noto Sans JP, © 2014-2021 Adobe, with
-                Reserved Font Name "Source"; the family is named Dandan.
-              </dd>
+              <dt>{{ t('credits.font') }}</dt>
+              <dd v-html="t('credits.fontBody')" />
             </div>
             <div>
-              <dt>Reading data</dt>
-              <dd>
-                <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, from JMdict (EDRDG),
-                JmdictFurigana and yomitan-jlpt-vocab, embedded in the font as reading tables. See
-                <a href="fonts/NOTICE.txt">NOTICE.txt</a>.
-              </dd>
+              <dt>{{ t('credits.data') }}</dt>
+              <dd v-html="t('credits.dataBody')" />
             </div>
             <div>
-              <dt>Code</dt>
-              <dd>MIT, Alexis MABANZA.</dd>
+              <dt>{{ t('credits.code') }}</dt>
+              <dd>{{ t('credits.codeBody') }}</dd>
             </div>
           </dl>
         </div>
@@ -95,8 +81,8 @@ li::before {
   background: var(--shu);
 }
 
-li a,
-dd a {
+li :deep(a),
+dd :deep(a) {
   color: var(--ink);
 }
 
