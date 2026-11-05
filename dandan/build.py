@@ -13,7 +13,7 @@ from fontTools.ttLib import TTFont
 from . import __version__
 from .base import load_base
 from .dictionary import Annotation, load_dictionary
-from .glyphs import Drawer, Layout
+from .glyphs import Drawer, Layout, VerticalDrawer
 from .gsub import LEVELS, Rules, install
 
 MAX_GLYPHS = 65535
@@ -21,6 +21,7 @@ MAX_GLYPHS = 65535
 RESERVE = 64
 
 LEVEL_NAMES = {"N5": 5, "N4": 4, "N3": 3, "N2": 2, "N1": 1, "all": 6}
+ORIENTATIONS = ("horizontal", "vertical")
 
 # Lone kanji kept bare even when the dictionary agrees on a reading: they are
 # mostly counters after digits (3日, 5本, 2時) whose reading changes there.
@@ -28,10 +29,14 @@ BARE_LONE = set("日月年時本分人匹杯方何後中回点")
 
 AUTHOR = "Alexis MABANZA"
 
+# Font units kept free beyond the vertical furigana, on each side of a line.
+VERTICAL_MARGIN = 40
+
 
 @dataclass
 class BuildResult:
     level: str
+    orientation: str
     family: str
     files: dict[str, Path]
     base_glyphs: int
@@ -80,13 +85,28 @@ def _postscript_name(family: str) -> str:
     return re.sub(r"[^A-Za-z0-9-]", "", family.replace(" ", "")) + "-Regular"
 
 
-def _set_names(font: TTFont, family: str, level: str) -> None:
+def default_family(level: str, orientation: str = "horizontal") -> str:
+    """Dandan, Dandan N4, Dandan Vertical, Dandan Vertical N4."""
+    family = "Dandan Vertical" if orientation == "vertical" else "Dandan"
+    return family if level == "all" else f"{family} {level}"
+
+
+def _set_names(font: TTFont, family: str, level: str, orientation: str = "horizontal") -> None:
     name = font["name"]
     copyright_text = (
         "Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. "
         f"Furigana glyphs and rules copyright 2026 {AUTHOR}."
     )
     postscript = _postscript_name(family)
+    description = (
+        "Japanese font with JLPT-level-aware furigana drawn by OpenType ligatures. "
+        "Readings come from JMdict and JmdictFurigana (CC BY-SA 4.0)."
+    )
+    if orientation == "vertical":
+        description = (
+            "Japanese font for vertical text (tategaki) with JLPT-level-aware furigana set right of the "
+            "kanji by OpenType ligatures. Readings come from JMdict and JmdictFurigana (CC BY-SA 4.0)."
+        )
     values = {
         0: copyright_text,
         1: family,
@@ -97,8 +117,7 @@ def _set_names(font: TTFont, family: str, level: str) -> None:
         6: postscript,
         8: AUTHOR,
         9: f"Ryoko NISHIZUKA, Paul D. Hunt (Noto Sans JP); furigana build by {AUTHOR}",
-        10: "Japanese font with JLPT-level-aware furigana drawn by OpenType ligatures. "
-        "Readings come from JMdict and JmdictFurigana (CC BY-SA 4.0).",
+        10: description,
         11: "",
         13: "This Font Software is licensed under the SIL Open Font License, Version 1.1. "
         "Reading data derived from JMdict, JmdictFurigana and yomitan-jlpt-vocab is CC BY-SA 4.0.",
@@ -140,8 +159,35 @@ def _set_metrics(font: TTFont, first: int) -> tuple[int, int]:
     return ascender, descender
 
 
+def _set_vertical_metrics(font: TTFont, first: int) -> tuple[int, int]:
+    """Make room for the furigana column on both sides of a vertical line.
+
+    Browsers centre a vertical line on the ideographic em box (y -120 to 880)
+    and size ``line-height: normal`` from the ascender and descender, so both
+    are set the furigana's reach (plus a margin) away from the em box's centre:
+    the normal line then leaves that reach free on each side. vhea's ascender
+    (centre line to the right edge) covers the furigana as well.
+    """
+    glyf, hmtx = font["glyf"], font["hmtx"]
+    order = font.getGlyphOrder()
+    reach = max((getattr(glyf[n], "xMax", 0) - hmtx[n][0] / 2 for n in order[first:]), default=0)
+    half = ((int(reach) + VERTICAL_MARGIN + 9) // 10) * 10
+    os2 = font["OS/2"]
+    centre = (os2.sTypoAscender + os2.sTypoDescender) // 2  # the base font's typo metrics are the em box
+    ascender, descender = centre + half, centre - half
+    hhea = font["hhea"]
+    hhea.ascent, hhea.descent, hhea.lineGap = ascender, descender, 0
+    os2.sTypoAscender, os2.sTypoDescender, os2.sTypoLineGap = ascender, descender, 0
+    os2.usWinAscent, os2.usWinDescent = ascender, -descender
+    os2.fsSelection |= 1 << 7  # USE_TYPO_METRICS
+    vhea = font["vhea"]
+    vhea.ascent = max(vhea.ascent, ((int(reach) + 9) // 10) * 10)
+    return ascender, descender
+
+
 def build(
     level: str = "all",
+    orientation: str = "horizontal",
     family: str | None = None,
     out_dir: Path = Path("dist"),
     max_words: int | None = None,
@@ -153,11 +199,14 @@ def build(
 ) -> BuildResult:
     if level not in LEVEL_NAMES:
         raise ValueError(f"unknown level {level!r}; expected one of {', '.join(LEVEL_NAMES)}")
-    family = family or ("Dandan" if level == "all" else f"Dandan {level}")
+    if orientation not in ORIENTATIONS:
+        raise ValueError(f"unknown orientation {orientation!r}; expected one of {', '.join(ORIENTATIONS)}")
+    vertical = orientation == "vertical"
+    family = family or default_family(level, orientation)
     log = lambda message: print(message, file=sys.stderr)  # noqa: E731
 
     annotations, report = load_dictionary(include_uncommon)
-    font = load_base(weight, furigana_weight)
+    font = load_base(weight, furigana_weight, vertical)
     base_glyphs = len(font.getGlyphOrder())
     budget = MAX_GLYPHS - RESERVE - base_glyphs
     if max_words is not None:
@@ -168,7 +217,10 @@ def build(
         f"{MAX_GLYPHS - RESERVE - base_glyphs} annotated glyphs available")
     log(f"dictionary: {len(candidates)} candidate glyphs ({len(report['ambiguous'])} ambiguous runs left bare)")
 
-    drawer = Drawer(font, layout)
+    drawer = VerticalDrawer(font, layout) if vertical else Drawer(font, layout)
+    # In vertical text the base font's vert lookups run first, so a kana after
+    # a kanji is already in its vertical form when the okurigana rules look at it.
+    next_forms = drawer.vert if isinstance(drawer, VerticalDrawer) else {}
     rules = Rules()
     known = _known_levels(level)
     annotated = 0
@@ -193,9 +245,12 @@ def build(
             for context in annotation.contexts:
                 next_glyph = drawer.cmap.get(ord(context))
                 if next_glyph is not None:
+                    next_glyph = next_forms.get(next_glyph, next_glyph)
                     rules.contextual.setdefault(base[0], {})[next_glyph] = name
         if annotation.level is not None:
             rules.hide[annotation.level][name] = base
+        elif vertical:
+            rules.unlisted[name] = base
     drawer.commit()
     first = base_glyphs
     total = len(font.getGlyphOrder())
@@ -203,9 +258,12 @@ def build(
         raise RuntimeError(f"{total} glyphs exceed the OpenType limit of {MAX_GLYPHS}")
     log(f"annotated glyphs: {annotated} (cap {budget}); total glyphs: {total}")
 
-    features = install(font, rules, known)
-    ascender, descender = _set_metrics(font, first)
-    _set_names(font, family, level)
+    features = install(font, rules, known, vertical)
+    if vertical:
+        ascender, descender = _set_vertical_metrics(font, first)
+    else:
+        ascender, descender = _set_metrics(font, first)
+    _set_names(font, family, level, orientation)
     font["post"].formatType = 3.0
     font["post"].extraNames, font["post"].mapping = [], {}
 
@@ -226,6 +284,7 @@ def build(
         font.save(files["woff2"])
     result = BuildResult(
         level=level,
+        orientation=orientation,
         family=family,
         files=files,
         base_glyphs=base_glyphs,

@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .build import LEVEL_NAMES, build
+from .build import LEVEL_NAMES, ORIENTATIONS, build
 from .fetch import fetch
 from .glyphs import Layout
 
@@ -27,9 +27,10 @@ def _add_build_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--no-woff2", action="store_true", help="write the TTF only")
 
 
-def _run_build(args: argparse.Namespace, level: str, family: str | None) -> None:
+def _run_build(args: argparse.Namespace, level: str, family: str | None, orientation: str) -> None:
     result = build(
         level=level,
+        orientation=orientation,
         family=family,
         out_dir=args.out,
         max_words=args.max_words,
@@ -60,10 +61,26 @@ def main(argv: list[str] | None = None) -> int:
         default="all",
         help="JLPT level the reader knows: its words and the easier ones stay bare (default: all = annotate all)",
     )
-    one.add_argument("--family", help='font family name (default: "Dandan" or "Dandan <level>")')
+    one.add_argument(
+        "--orientation",
+        choices=ORIENTATIONS,
+        default="horizontal",
+        help="horizontal: furigana above the kanji (calt); vertical: a separate font for vertical text, "
+        "furigana right of the kanji (vert, vrt2)",
+    )
+    one.add_argument(
+        "--family",
+        help='font family name (default: "Dandan", "Dandan <level>", "Dandan Vertical" or "Dandan Vertical <level>")',
+    )
     _add_build_options(one)
 
-    every = commands.add_parser("build-all", help="build the font for every level")
+    every = commands.add_parser("build-all", help="build the font for every level, horizontal and vertical")
+    every.add_argument(
+        "--orientation",
+        choices=(*ORIENTATIONS, "both"),
+        default="both",
+        help="which fonts to build (default: both)",
+    )
     _add_build_options(every)
 
     args = parser.parse_args(argv)
@@ -71,10 +88,12 @@ def main(argv: list[str] | None = None) -> int:
         for filename, info in fetch().items():
             print(f"{filename}: {info['sha256'][:16]}  {info['url']}")
     elif args.command == "build":
-        _run_build(args, args.level, args.family)
+        _run_build(args, args.level, args.family, args.orientation)
     else:
-        for level in LEVEL_NAMES:
-            _run_build(args, level, None)
+        orientations = ORIENTATIONS if args.orientation == "both" else (args.orientation,)
+        for orientation in orientations:
+            for level in LEVEL_NAMES:
+                _run_build(args, level, None, orientation)
     return 0
 
 
