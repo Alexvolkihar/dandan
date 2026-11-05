@@ -16,7 +16,8 @@ jobs:
   fonts:
     name: Build and publish the fonts
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # build-all makes 12 fonts (6 levels x horizontal/vertical), about 3 minutes each.
+    timeout-minutes: 90
     permissions:
       contents: write
     steps:
@@ -55,13 +56,20 @@ jobs:
         env:
           DANDAN_DIST: dist
 
-      - name: Attach the fonts to the release
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Package the browser extension
+        run: node extension/scripts/build.mjs
+
+      - name: Attach the fonts and the extension to the release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
-          files=(dist/*.woff2 dist/*.ttf OFL.txt site/public/fonts/NOTICE.txt)
+          files=(dist/*.woff2 dist/*.ttf OFL.txt site/public/fonts/NOTICE.txt extension/dist/*.zip)
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "${files[@]}" --clobber
           else

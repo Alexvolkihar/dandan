@@ -1,6 +1,6 @@
 {
   "name": "dandan-extension",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Browser extension (Chrome, Firefox) that sets Japanese text in the Dandan furigana font",
   "license": "MIT",
