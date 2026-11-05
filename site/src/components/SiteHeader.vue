@@ -1,6 +1,8 @@
 <script setup>
 import { useTheme } from '../composables/useTheme.js'
 import { REPO_URL } from '../data.js'
+import { t } from '../i18n/index.ts'
+import LangSwitch from './LangSwitch.vue'
 
 const { dark, toggle } = useTheme()
 </script>
@@ -8,23 +10,24 @@ const { dark, toggle } = useTheme()
 <template>
   <header class="header">
     <div class="wrap bar">
-      <a class="brand" href="#top" aria-label="Dandan, back to top">
+      <a class="brand" href="#top" :aria-label="t('header.brand')">
         <span class="mark jp" lang="ja" aria-hidden="true">段々</span>
         <span class="name">Dandan</span>
       </a>
-      <nav aria-label="Sections">
+      <nav :aria-label="t('header.sections')">
         <ul>
-          <li class="wide"><a href="#playground">Playground</a></li>
-          <li class="wide"><a href="#how">How it works</a></li>
-          <li class="wide"><a href="#use">Use it</a></li>
-          <li class="wide"><a href="#limits">Limits</a></li>
-          <li v-if="REPO_URL" class="wide"><a :href="REPO_URL">Source</a></li>
-          <li><a class="chip" href="#download">Download</a></li>
+          <li class="wide"><a href="#playground">{{ t('header.playground') }}</a></li>
+          <li class="wide"><a href="#how">{{ t('header.how') }}</a></li>
+          <li class="wide"><a href="#use">{{ t('header.use') }}</a></li>
+          <li class="wide"><a href="#limits">{{ t('header.limits') }}</a></li>
+          <li v-if="REPO_URL" class="wide"><a :href="REPO_URL">{{ t('header.source') }}</a></li>
+          <li><LangSwitch /></li>
+          <li class="dl"><a class="chip" href="#download">{{ t('header.download') }}</a></li>
           <li>
             <button
               type="button"
               class="theme"
-              :aria-label="dark ? 'Switch to light theme' : 'Switch to dark theme'"
+              :aria-label="dark ? t('header.toLight') : t('header.toDark')"
               @click="toggle"
             >
               <svg v-if="dark" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -135,6 +138,13 @@ nav .chip {
 
 @media (max-width: 860px) {
   .wide {
+    display: none;
+  }
+}
+
+/* Room for the language switcher on phones: the hero's download button is just below. */
+@media (max-width: 479px) {
+  .dl {
     display: none;
   }
 }
