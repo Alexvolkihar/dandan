@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dandan-font"
+version = "0.1.0"
+description = "A Japanese font that draws JLPT-level-aware furigana with OpenType ligatures"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Alexis MABANZA" }]
+requires-python = ">=3.12"
+dependencies = [
+    "fonttools==4.68.0",
+    "brotli==1.2.1",
+]
+
+[project.optional-dependencies]
+test = ["uharfbuzz==0.57.0", "pytest==9.2.0"]
+
+[tool.setuptools]
+packages = ["dandan"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
