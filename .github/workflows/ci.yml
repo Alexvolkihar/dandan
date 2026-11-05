@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: Site (pnpm build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.10.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  python:
+    name: Font builder (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - run: python -m pip install -r requirements.txt
+
+      # Only the downloaded sources are cached, never the files the build derives from them.
+      # The key follows dandan/fetch.py, where the URLs, tags and commits are pinned. There are
+      # no restore-keys on purpose: fetch skips files that already exist, so restoring an older
+      # cache after a pin changes would keep the old data.
+      - name: Restore the source data
+        uses: actions/cache@v6
+        with:
+          path: |
+            cache/NotoSansJP-VF.ttf
+            cache/NotoSansJP-OFL.txt
+            cache/JMdict_e.gz
+            cache/JmdictFurigana.json.tar.gz
+            cache/jlpt-*.csv
+          key: dandan-sources-${{ hashFiles('dandan/fetch.py') }}
+
+      - name: Fetch the base font and the dictionaries
+        run: python -m dandan fetch
+
+      - name: Run the tests (they build the fonts they shape)
+        run: python -m pytest -v

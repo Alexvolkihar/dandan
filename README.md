@@ -1,5 +1,7 @@
 # Dandan 段々
 
+[![CI](https://github.com/Alexvolkihar/dandan/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Alexvolkihar/dandan/actions/workflows/ci.yml)
+
 A Japanese font that draws furigana over kanji by itself, and drops the readings of the JLPT words you
 already know.
 
@@ -203,6 +205,23 @@ okurigana readings sit over the kanji only, vertical text is left alone, and the
 
 `scripts/render.py docs/sample.html docs/sample.png 1000x620` renders [a sample page](docs/sample.png) with
 headless Chrome, to check what a browser draws.
+
+## CI and deployment
+
+[`ci.yml`](.github/workflows/ci.yml) runs on every push to `master` and every pull request, in two jobs:
+
+- `site`: `pnpm install --frozen-lockfile` and `pnpm build` in `site/` (pnpm 11, Node 22);
+- `python`: on Python 3.12 and 3.14, `python -m dandan fetch` then `python -m pytest -v`, which builds the
+  two fonts the shaping tests need. The downloaded sources are cached under a key that follows the pins in
+  `dandan/fetch.py`, so a new pin downloads everything again.
+
+Vercel deploys the site on its own: every push to `master` goes live at
+[dandan.alexvolkihar.ovh](https://dandan.alexvolkihar.ovh), and every pull request gets a preview URL. The
+Vercel project builds `site/` with `pnpm build`; the CI run is a separate check on the same commit.
+
+[`release.yml`](.github/workflows/release.yml) runs on a `v*` tag (`git tag v0.2.0 && git push origin v0.2.0`):
+it builds every level with `build-all`, runs the tests on those fonts, and attaches the WOFF2 and TTF files,
+`OFL.txt` and `NOTICE.txt` to a GitHub Release.
 
 ## Credits
 
