@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dandan demo</title>
+<style>
+  @font-face {
+    font-family: "Dandan";
+    src: url("../dist/Dandan.woff2") format("woff2");
+    font-display: block;
+  }
+  :root {
+    --bg: #fbfaf7;
+    --fg: #1d1c1a;
+    --muted: #6b675f;
+    --line: #e4e0d8;
+    --accent: #b6452c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #171614; --fg: #ece9e2; --muted: #a29d93; --line: #34312c; --accent: #e07a5f; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 system-ui, sans-serif;
+  }
+  main { max-width: 52rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
+  p.lead { color: var(--muted); margin: 0 0 1.5rem; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center;
+    padding: .75rem 0; border-block: 1px solid var(--line); margin-bottom: 1.5rem;
+  }
+  .controls label { display: inline-flex; gap: .4rem; align-items: center; }
+  select { font: inherit; padding: .2rem .4rem; }
+  #sample {
+    font-family: "Dandan", sans-serif;
+    font-size: 30px;
+    line-height: 1.8;
+    outline: none;
+    min-height: 6em;
+  }
+  #sample p { margin: 0 0 .6em; }
+  code { font-size: .9em; color: var(--accent); }
+  footer { color: var(--muted); font-size: .85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dandan</h1>
+  <p class="lead">Plain text, no &lt;ruby&gt;, no script for the furigana: the font draws them. Pick the JLPT
+    level you already know and its words lose their readings.</p>
+
+  <div class="controls">
+    <label>I know
+      <select id="level">
+        <option value="">nothing yet (annotate all)</option>
+        <option value="ss05">N5</option>
+        <option value="ss04">N4 and below</option>
+        <option value="ss03">N3 and below</option>
+        <option value="ss02">N2 and below</option>
+        <option value="ss01">N1 and below</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="furigana" checked> Furigana</label>
+    <span>CSS: <code id="css">font-feature-settings: normal</code></span>
+  </div>
+
+  <div id="sample" contenteditable="true" spellcheck="false">
+    <p>今日は図書館で日本語の勉強をします。</p>
+    <p>先生は毎朝新聞を読んでから学校へ行きます。</p>
+    <p>経済の状況は複雑ですが、政府は対策を検討しています。</p>
+    <p>東京の天気は晴れで、富士山がよく見えました。</p>
+  </div>
+
+  <footer>
+    The text above is editable. The level selector switches stylistic sets (<code>ss05</code> hides N5 words,
+    <code>ss04</code> N5 and N4, &hellip; <code>ss01</code> every JLPT word); the checkbox turns
+    <code>calt</code> off. Use a line-height of 1.7 or more.
+  </footer>
+</main>
+<script>
+  const sample = document.getElementById("sample");
+  const level = document.getElementById("level");
+  const furigana = document.getElementById("furigana");
+  const css = document.getElementById("css");
+  const params = new URLSearchParams(location.search);
+  if (params.has("level")) level.value = params.get("level");
+  if (params.get("furigana") === "off") furigana.checked = false;
+  function update() {
+    const features = [];
+    if (level.value) features.push(`"${level.value}" 1`);
+    if (!furigana.checked) features.push('"calt" 0');
+    const value = features.length ? features.join(", ") : "normal";
+    sample.style.fontFeatureSettings = value;
+    css.textContent = `font-feature-settings: ${value}`;
+  }
+  level.addEventListener("change", update);
+  furigana.addEventListener("change", update);
+  update();
+</script>
+</body>
+</html>
