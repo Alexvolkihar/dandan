@@ -1,6 +1,12 @@
 <script setup>
+import CreditsSection from './components/CreditsSection.vue'
 import HeroSection from './components/HeroSection.vue'
+import HowSection from './components/HowSection.vue'
+import LimitsSection from './components/LimitsSection.vue'
+import PlaygroundSection from './components/PlaygroundSection.vue'
+import SiteFooter from './components/SiteFooter.vue'
 import SiteHeader from './components/SiteHeader.vue'
+import UseSection from './components/UseSection.vue'
 </script>
 
 <template>
@@ -9,7 +15,13 @@ import SiteHeader from './components/SiteHeader.vue'
   <SiteHeader />
   <main id="main">
     <HeroSection />
+    <PlaygroundSection />
+    <HowSection />
+    <UseSection />
+    <LimitsSection />
+    <CreditsSection />
   </main>
+  <SiteFooter />
 </template>
 
 <style>
