@@ -6,3 +6,8 @@ cache/
 dist/
 build/
 *.egg-info/
+node_modules/
+
+# The site ships the built font with its licences (copied from dist/ by site/scripts/copy-fonts.mjs).
+!site/public/fonts/
+!site/public/fonts/*

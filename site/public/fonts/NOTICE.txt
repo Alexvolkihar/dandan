@@ -1,0 +1,27 @@
+Dandan font files: licences and attribution
+===========================================
+
+Dandan.woff2 and Dandan.ttf contain two kinds of material.
+
+1. Outlines (kanji, kana, Latin, punctuation)
+   Derived from Noto Sans JP, Copyright 2014-2021 Adobe (http://www.adobe.com/),
+   with Reserved Font Name "Source". Licensed under the SIL Open Font License,
+   Version 1.1: see OFL.txt next to this file. The furigana glyphs and the
+   OpenType rules are Copyright 2026 Alexis MABANZA, under the same licence.
+   The family name "Dandan" does not use the Reserved Font Name.
+
+2. Readings (which kana appear over which kanji, and each word's JLPT level)
+   Derived from:
+   - JMdict, by the Electronic Dictionary Research and Development Group (EDRDG),
+     https://www.edrdg.org/jmdict/j_jmdict.html, CC BY-SA 4.0
+     (https://www.edrdg.org/edrdg/licence.html);
+   - JmdictFurigana by Doublevil, https://github.com/Doublevil/JmdictFurigana,
+     CC BY-SA 4.0;
+   - yomitan-jlpt-vocab by stephenmk, https://github.com/stephenmk/yomitan-jlpt-vocab,
+     CC BY-SA 4.0, built on Jonathan Waller's JLPT lists
+     (http://www.tanos.co.uk/jlpt/, Creative Commons BY).
+
+   These reading tables are shared under CC BY-SA 4.0
+   (https://creativecommons.org/licenses/by-sa/4.0/). If you redistribute a
+   modified font or the reading data, keep these attributions and the same
+   share-alike terms.
