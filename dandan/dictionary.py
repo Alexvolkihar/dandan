@@ -29,7 +29,7 @@ from pathlib import Path
 
 from .fetch import CACHE, require
 
-DICTIONARY_VERSION = 5
+DICTIONARY_VERSION = 6
 
 # A reading must weigh this many times more than the next one to be kept.
 DOMINANCE = 3.0
@@ -273,6 +273,19 @@ def _candidates(occurrences: list[Occurrence]) -> dict[str, tuple[int, int, int]
     return readings
 
 
+AFFIX_POS = {"suf", "pref", "ctr"}
+
+
+def _affix_conflict(occurrences: list[Occurrence], chosen: str) -> bool:
+    """A lone kanji is often a suffix or counter after another word (東京都,
+    三本): if a common affix reading differs from the chosen one, the font
+    cannot tell which applies, so the kanji stays bare."""
+    return any(
+        occ.reading != chosen and occ.pair.common and not occ.following and set(occ.pair.pos) & AFFIX_POS
+        for occ in occurrences
+    )
+
+
 def compile_dictionary(include_uncommon: bool = False) -> tuple[list[Annotation], dict[str, list[str]]]:
     """Build every annotation the font can use, plus a report of skipped runs."""
     pairs = _parse_jmdict(require("JMdict_e.gz"))
@@ -300,6 +313,8 @@ def compile_dictionary(include_uncommon: bool = False) -> tuple[list[Annotation]
     ambiguous: list[str] = []
     for run, occurrences in by_run.items():
         chosen = _choose(_candidates(occurrences))
+        if chosen is not None and len(run) == 1 and _affix_conflict(occurrences, chosen):
+            chosen = None
         contexts: dict[str, str] = {}
         if len(run) == 1:
             by_context: dict[str, list[Occurrence]] = defaultdict(list)
