@@ -1,0 +1,84 @@
+{
+  "localeCode": {
+    "message": "en",
+    "description": "Language code of this translation, set as the popup's lang attribute."
+  },
+  "extName": {
+    "message": "Dandan Furigana",
+    "description": "Extension name (stores, browser menus)."
+  },
+  "extDescription": {
+    "message": "Shows furigana over kanji on Japanese web pages with the Dandan font, and hides the readings of the JLPT words you already know.",
+    "description": "Store and browser description, at most 132 characters."
+  },
+  "actionTitle": {
+    "message": "Dandan: furigana on this page",
+    "description": "Tooltip of the toolbar button."
+  },
+  "tagline": {
+    "message": "Furigana for Japanese text, step by step"
+  },
+  "siteLabel": {
+    "message": "On this site"
+  },
+  "siteUnavailable": {
+    "message": "Dandan cannot run on this page."
+  },
+  "siteDenied": {
+    "message": "Access to this site was not granted, so Dandan stays off here."
+  },
+  "defaultLabel": {
+    "message": "On for all sites"
+  },
+  "defaultHint": {
+    "message": "Asks for access to every website. Sites you turn off stay off."
+  },
+  "levelLabel": {
+    "message": "Words you already know"
+  },
+  "levelNone": {
+    "message": "None"
+  },
+  "levelOff": {
+    "message": "Off"
+  },
+  "levelHint_none": {
+    "message": "Every word gets its reading."
+  },
+  "levelHint_n5": {
+    "message": "Readings of N5 words are hidden."
+  },
+  "levelHint_n4": {
+    "message": "Readings of N5 and N4 words are hidden."
+  },
+  "levelHint_n3": {
+    "message": "Readings of N5 to N3 words are hidden."
+  },
+  "levelHint_n2": {
+    "message": "Readings of N5 to N2 words are hidden."
+  },
+  "levelHint_n1": {
+    "message": "Readings of every JLPT word are hidden."
+  },
+  "levelHint_off": {
+    "message": "The font only, with no furigana."
+  },
+  "scopeLabel": {
+    "message": "Apply to"
+  },
+  "scopeMain": {
+    "message": "Main text only"
+  },
+  "scopePage": {
+    "message": "Whole page"
+  },
+  "lineHeightLabel": {
+    "message": "Line height"
+  },
+  "readingsNote": {
+    "message": "Readings come from a dictionary and can be wrong."
+  },
+  "website": {
+    "message": "Website"
+  }
+}
