@@ -1,0 +1,80 @@
+{
+  "localeCode": {
+    "message": "fr"
+  },
+  "extName": {
+    "message": "Dandan Furigana"
+  },
+  "extDescription": {
+    "message": "Affiche des furigana sur les kanji des pages japonaises avec la police Dandan et masque les lectures des mots JLPT déjà connus."
+  },
+  "actionTitle": {
+    "message": "Dandan : furigana sur cette page"
+  },
+  "tagline": {
+    "message": "Des furigana pour le japonais, pas à pas"
+  },
+  "siteLabel": {
+    "message": "Sur ce site"
+  },
+  "siteUnavailable": {
+    "message": "Dandan ne peut pas fonctionner sur cette page."
+  },
+  "siteDenied": {
+    "message": "L’accès à ce site n’a pas été accordé : Dandan reste désactivé ici."
+  },
+  "defaultLabel": {
+    "message": "Activé sur tous les sites"
+  },
+  "defaultHint": {
+    "message": "Demande l’accès à tous les sites. Ceux que vous désactivez le restent."
+  },
+  "levelLabel": {
+    "message": "Mots que vous connaissez déjà"
+  },
+  "levelNone": {
+    "message": "Aucun"
+  },
+  "levelOff": {
+    "message": "Sans"
+  },
+  "levelHint_none": {
+    "message": "Chaque mot a sa lecture."
+  },
+  "levelHint_n5": {
+    "message": "Les lectures des mots N5 sont masquées."
+  },
+  "levelHint_n4": {
+    "message": "Les lectures des mots N5 et N4 sont masquées."
+  },
+  "levelHint_n3": {
+    "message": "Les lectures des mots N5 à N3 sont masquées."
+  },
+  "levelHint_n2": {
+    "message": "Les lectures des mots N5 à N2 sont masquées."
+  },
+  "levelHint_n1": {
+    "message": "Les lectures de tous les mots du JLPT sont masquées."
+  },
+  "levelHint_off": {
+    "message": "La police seule, sans furigana."
+  },
+  "scopeLabel": {
+    "message": "Appliquer à"
+  },
+  "scopeMain": {
+    "message": "Texte principal"
+  },
+  "scopePage": {
+    "message": "Toute la page"
+  },
+  "lineHeightLabel": {
+    "message": "Interligne"
+  },
+  "readingsNote": {
+    "message": "Les lectures viennent d’un dictionnaire et peuvent être fausses."
+  },
+  "website": {
+    "message": "Site web"
+  }
+}

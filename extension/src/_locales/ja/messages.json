@@ -1,0 +1,80 @@
+{
+  "localeCode": {
+    "message": "ja"
+  },
+  "extName": {
+    "message": "Dandan ふりがな"
+  },
+  "extDescription": {
+    "message": "Dandan フォントで日本語のウェブページの漢字にふりがなを付け、知っている JLPT の単語の読みを隠します。"
+  },
+  "actionTitle": {
+    "message": "Dandan：このページにふりがな"
+  },
+  "tagline": {
+    "message": "日本語にふりがなを、段々と"
+  },
+  "siteLabel": {
+    "message": "このサイトで使う"
+  },
+  "siteUnavailable": {
+    "message": "このページでは Dandan を使えません。"
+  },
+  "siteDenied": {
+    "message": "このサイトへのアクセスが許可されていないため、Dandan はオフのままです。"
+  },
+  "defaultLabel": {
+    "message": "すべてのサイトで使う"
+  },
+  "defaultHint": {
+    "message": "すべてのサイトへのアクセスを求めます。オフにしたサイトはオフのままです。"
+  },
+  "levelLabel": {
+    "message": "知っている単語"
+  },
+  "levelNone": {
+    "message": "なし"
+  },
+  "levelOff": {
+    "message": "オフ"
+  },
+  "levelHint_none": {
+    "message": "すべての単語に読みを付けます。"
+  },
+  "levelHint_n5": {
+    "message": "N5 の単語の読みを隠します。"
+  },
+  "levelHint_n4": {
+    "message": "N5・N4 の単語の読みを隠します。"
+  },
+  "levelHint_n3": {
+    "message": "N5〜N3 の単語の読みを隠します。"
+  },
+  "levelHint_n2": {
+    "message": "N5〜N2 の単語の読みを隠します。"
+  },
+  "levelHint_n1": {
+    "message": "JLPT のすべての単語の読みを隠します。"
+  },
+  "levelHint_off": {
+    "message": "フォントだけ使い、ふりがなは付けません。"
+  },
+  "scopeLabel": {
+    "message": "対象"
+  },
+  "scopeMain": {
+    "message": "本文のみ"
+  },
+  "scopePage": {
+    "message": "ページ全体"
+  },
+  "lineHeightLabel": {
+    "message": "行間"
+  },
+  "readingsNote": {
+    "message": "読みは辞書によるもので、間違うことがあります。"
+  },
+  "website": {
+    "message": "ウェブサイト"
+  }
+}

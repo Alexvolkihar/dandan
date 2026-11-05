@@ -246,6 +246,22 @@ pnpm build   # static output in site/dist
 
 [site/DEPLOY.md](site/DEPLOY.md) covers hosting on GitHub Pages or Cloudflare Pages.
 
+## Browser extension
+
+[`extension/`](extension) is a Chrome and Firefox extension (Manifest V3) that sets the Japanese text of any
+website in Dandan. A toolbar popup turns it on per site (it asks for access to that site only) or for all sites,
+and picks the JLPT level, main text or whole page, and the line height. It leaves `<ruby>`, code and form fields
+alone, follows pages that add text later, makes no network requests and has no analytics.
+
+```sh
+cd extension
+node scripts/build.mjs   # dist/chrome/, dist/firefox/ and a zip for each store
+```
+
+Load `extension/dist/chrome` with *Load unpacked* in `chrome://extensions`, or `extension/dist/firefox` as a
+temporary add-on in `about:debugging`. [extension/README.md](extension/README.md) covers the features, the
+permissions and the limits; [extension/PRIVACY.md](extension/PRIVACY.md) is the privacy policy.
+
 ## Tests
 
 ```sh

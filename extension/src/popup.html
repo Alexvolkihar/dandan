@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dandan</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="brand">
+    <img src="icons/icon-48.png" width="32" height="32" alt="">
+    <div>
+      <h1>Dandan <span lang="ja">段々</span></h1>
+      <p data-i18n="tagline"></p>
+    </div>
+  </header>
+
+  <main>
+    <section class="switches">
+      <div class="row">
+        <div class="row-text">
+          <label for="site" data-i18n="siteLabel"></label>
+          <span id="site-name" class="sub"></span>
+        </div>
+        <input type="checkbox" role="switch" id="site" class="switch">
+      </div>
+      <p id="site-note" class="note" hidden></p>
+
+      <div class="row">
+        <div class="row-text">
+          <label for="default" data-i18n="defaultLabel"></label>
+          <span class="sub" data-i18n="defaultHint"></span>
+        </div>
+        <input type="checkbox" role="switch" id="default" class="switch">
+      </div>
+    </section>
+
+    <fieldset class="levels">
+      <legend data-i18n="levelLabel"></legend>
+      <div class="chips" id="levels"></div>
+      <p id="level-hint" class="sub" aria-live="polite"></p>
+    </fieldset>
+
+    <p id="preview" class="preview" lang="ja">経済の状況は複雑だが、政府は対策を検討している。</p>
+
+    <fieldset class="scope">
+      <legend data-i18n="scopeLabel"></legend>
+      <div class="segmented">
+        <label><input type="radio" name="scope" value="main"><span data-i18n="scopeMain"></span></label>
+        <label><input type="radio" name="scope" value="page"><span data-i18n="scopePage"></span></label>
+      </div>
+    </fieldset>
+
+    <div class="line-height">
+      <label for="line-height" data-i18n="lineHeightLabel"></label>
+      <input type="range" id="line-height" min="1.6" max="2.4" step="0.1">
+      <output id="line-height-value" for="line-height"></output>
+    </div>
+  </main>
+
+  <footer>
+    <p class="sub" data-i18n="readingsNote"></p>
+    <a href="https://dandan.alexvolkihar.ovh" target="_blank" rel="noopener" data-i18n="website"></a>
+  </footer>
+
+  <script src="common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
