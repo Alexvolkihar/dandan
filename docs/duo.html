@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Dandan Duo sample</title>
+<style>
+  @font-face { font-family: "Dandan Duo"; src: url("../dist/Dandan-Duo.woff2") format("woff2"); font-display: block; }
+  body { margin: 0; background: #fbfaf7; color: #1d1c1a; font: 15px/1.4 system-ui, sans-serif; }
+  .wrap { display: flex; gap: 0; padding: 20px 24px; width: max-content; align-items: flex-start; }
+  .panel { padding: 0 22px; border-left: 1px solid #e4e0d8; }
+  .panel:first-child { border-left: 0; padding-left: 0; }
+  .label { color: #6b675f; margin-bottom: 10px; white-space: nowrap; }
+  .label b { display: block; color: #1d1c1a; font-weight: 600; }
+  .text { font-family: "Dandan Duo"; font-size: 30px; word-break: auto-phrase; }
+  .yoko { line-height: 1.8; width: 15em; }
+  .tate { writing-mode: vertical-rl; line-height: 2.1; height: 11em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel"><div class="label"><b>Horizontal</b>writing-mode: horizontal-tb</div>
+    <div class="text yoko">今日は図書館で日本語の勉強をします。経済の状況は複雑ですが、政府は対策を検討しています。</div></div>
+  <div class="panel"><div class="label"><b>Vertical</b>writing-mode: vertical-rl</div>
+    <div class="text tate">今日は図書館で日本語の勉強をします。経済の状況は複雑ですが、政府は対策を検討しています。</div></div>
+  <div class="panel"><div class="label"><b>Vertical, knows N5</b>"ss05" 1</div>
+    <div class="text tate" style="font-feature-settings: 'ss05' 1">今日は図書館で日本語の勉強をします。経済の状況は複雑ですが、政府は対策を検討しています。</div></div>
+</div>
+</body>
+</html>

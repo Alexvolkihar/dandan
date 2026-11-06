@@ -16,7 +16,13 @@ already know.
 Dandan is built on Noto Sans JP. Its OpenType ligatures replace each kanji word with a glyph that carries its
 reading above it, so plain text gets furigana with no `<ruby>` markup and no JavaScript. About 57,600 words are
 annotated, JLPT vocabulary first. A second font, Dandan Vertical, sets the readings beside the kanji in
-[vertical text](#vertical-text).
+[vertical text](#vertical-text), and a third, Dandan Duo, does [both](#both-directions-dandan-duo).
+
+| Font | Pick it for | Words with a reading | WOFF2 |
+| --- | --- | --- | --- |
+| **Dandan** | horizontal text: the lightest, and the most words | 57,611 | 1.8 MB |
+| **Dandan Vertical** | vertical text (tategaki) only | 57,410 | 2.0 MB |
+| **Dandan Duo** | pages that set Japanese both ways, with one font | 28,705 per direction | 1.9 MB |
 
 Stylistic sets tell the font what the reader already knows. Each one hides the readings of a JLPT level and
 every easier level, while harder words keep theirs. The name 段々 (*dandan*) means "step by step".
@@ -99,15 +105,51 @@ of the first (rightmost) column, and below about 1.5 they touch the next column.
 Shapers apply `calt` only in horizontal text and `vert` only in vertical text, so Dandan Vertical carries its
 word rules in `vert` and `vrt2`. `"calt" 0` therefore does nothing in vertical text; `"ss10" 1` hides every
 reading instead. In horizontal text Dandan Vertical shows plain kanji, and Dandan shows plain kanji in vertical
-text: use each font in its own direction.
+text: use each font in its own direction, or Dandan Duo for both.
+
+## Both directions: Dandan Duo
+
+**Dandan Duo** carries Dandan's rules and Dandan Vertical's in one file. The text's `writing-mode` picks the set:
+readings above the kanji in horizontal text, right of them in vertical text, with no feature flag to change.
+
+![The same two sentences in Dandan Duo, set horizontally, then vertically with every reading and with ss05](docs/images/duo.png)
+
+```css
+@font-face {
+  font-family: "Dandan Duo";
+  src: url("Dandan-Duo.woff2") format("woff2");
+  font-display: swap;
+}
+
+.jp      { font-family: "Dandan Duo", sans-serif; line-height: 1.8; }
+.jp.tate { writing-mode: vertical-rl; line-height: 2.1; }  /* vertical readings need 2.0 or more */
+
+.knows-n4 { font-feature-settings: "ss04" 1; }           /* same stylistic sets in both directions */
+.plain    { font-feature-settings: "calt" 0, "ss10" 1; }  /* no furigana in either direction */
+```
+
+In each direction it shapes text exactly as the single-direction font with the same words does (the tests check
+this glyph by glyph with HarfBuzz, and headless Chrome draws the same pixels), with three differences:
+
+- **Half the words.** OpenType caps a font at 65,535 glyphs, and the Duo needs a horizontal and a vertical glyph
+  for each word, so each direction gets 28,705 words instead of about 57,500. That still covers every JLPT word
+  and every JMdict priority word, with the commonest of the rest; the rarer compounds lose their reading (or are
+  read kanji by kanji, as 朝早く is).
+- **Switches.** As in each font, `"calt" 0` turns horizontal readings off and `"ss10" 1` vertical ones. Combine
+  them to turn every reading off.
+- **Line height.** The Duo keeps Dandan's ascender and descender, so horizontal text sits exactly as in Dandan,
+  and `line-height: normal` is about 1.65 in both directions. Vertical lines need 2.0 or more, so set it.
+
+Pick Dandan or Dandan Vertical when a page uses only one direction: they annotate twice as many words.
 
 ## Download
 
 - From the website: [dandan.alexvolkihar.ovh](https://dandan.alexvolkihar.ovh), WOFF2 (1.8 MB) or TTF (6.9 MB),
-  and Dandan Vertical as WOFF2 (2.0 MB) or TTF (7.3 MB).
+  Dandan Vertical as WOFF2 (2.0 MB) or TTF (7.3 MB), and Dandan Duo as WOFF2 (1.9 MB) or TTF (7.2 MB).
 - From this repository: [`site/public/fonts/`](site/public/fonts) holds `Dandan.woff2`, `Dandan.ttf`,
-  `Dandan-Vertical.woff2`, `Dandan-Vertical.ttf`, the OFL and the attribution notice. Keep `OFL.txt` and
-  `NOTICE.txt` next to the font when you redistribute it.
+  `Dandan-Vertical.woff2`, `Dandan-Vertical.ttf`, `Dandan-Duo.woff2`, `Dandan-Duo.ttf`, the OFL and the
+  attribution notice. Keep `OFL.txt` and `NOTICE.txt` next to the font when you redistribute it.
+- From the [GitHub releases](https://github.com/Alexvolkihar/dandan/releases): every level of the three fonts.
 
 These files are the `all` build (every reading shown by default, levels picked with stylistic sets). Fonts
 with a level baked in come from a build.
@@ -122,7 +164,8 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m dandan build                       # dist/Dandan.ttf, .woff2, .json
 .venv/bin/python -m dandan build --level N4 --family "Dandan N4"
 .venv/bin/python -m dandan build --orientation vertical  # dist/Dandan-Vertical.ttf, .woff2, .json
-.venv/bin/python -m dandan build-all                   # all, N5 ... N1, horizontal and vertical, into dist/
+.venv/bin/python -m dandan build --orientation both      # dist/Dandan-Duo.ttf, .woff2, .json
+.venv/bin/python -m dandan build-all                   # all, N5 ... N1, of all three fonts, into dist/
 ```
 
 `build` writes `dist/<Family>.ttf`, `dist/<Family>.woff2` and `dist/<Family>.json` (glyph counts, budget,
@@ -131,10 +174,10 @@ features). `fetch` records the URL and SHA-256 of every download in `cache/manif
 | Option | Default | |
 | --- | --- | --- |
 | `--level N5\|N4\|N3\|N2\|N1\|all` | `all` | Level already known: its words and the easier ones are bare by default (`build` only) |
-| `--orientation horizontal\|vertical` | `horizontal` | `vertical` builds Dandan Vertical (`build-all` also takes `both`, its default) |
-| `--family NAME` | `Dandan` / `Dandan <level>` | Family name (`Dandan Vertical` / `Dandan Vertical <level>` when vertical); never "Source" or "Noto" (see Licences) |
+| `--orientation horizontal\|vertical\|both` | `horizontal` | `vertical` builds Dandan Vertical, `both` Dandan Duo (`build-all` also takes `all`, its default: the three fonts) |
+| `--family NAME` | `Dandan` / `Dandan <level>` | Family name (`Dandan Vertical`, `Dandan Duo`, plus ` <level>`, for the other orientations); never "Source" or "Noto" (see Licences) |
 | `--dictionary full\|common` | `full` | `common`: JLPT and JMdict priority words only (23,098 glyphs, WOFF2 about 1.3 MB) |
-| `--max-words N` | glyph budget | Cap the number of annotated glyphs |
+| `--max-words N` | glyph budget | Cap the number of annotated glyphs (per direction for Dandan Duo) |
 | `--weight`, `--furigana-weight` | 400, 600 | Weight of the text and of the furigana kana |
 | `--scale` | 0.5 | Furigana size relative to the text |
 | `--out DIR` | `dist` | Output directory |
@@ -148,7 +191,8 @@ Every level build has the same 65,471 glyphs and the same size (1,888,560 bytes 
 few hundred bytes for the others; 6.9 MB of TTF). A known word still needs its ligature to win the longest
 match, so only the rules differ. A vertical build also has 65,471 glyphs: 8,061 base glyphs, since it adds the
 vertical forms of the furigana kana, and 57,410 words (2,053,236 bytes of WOFF2, 7.3 MB of TTF; its `ss10`
-lookup adds about 160 KB).
+lookup adds about 160 KB). Dandan Duo has the vertical build's 8,061 base glyphs and 28,705 words in each
+direction, 65,471 glyphs again (2,003,528 bytes of WOFF2, 7.2 MB of TTF).
 
 `demo/index.html` is a bare test page for the built font: serve the repository root with
 `python3 -m http.server 8000` and open `http://localhost:8000/demo/`.
@@ -198,6 +242,17 @@ Noto Sans JP (variable) ─▶ subset to JIS X 0208 + kana + Latin ─▶ instan
    and descender are set 1000 units either side of the em box's centre (`line-height: normal` = 2.0), and
    `vhea`'s ascender covers the furigana. The font is TrueType, so it needs no `VORG`: the vertical origin
    comes from `vmtx`.
+8. **Duo build** (`--orientation both`). The vertical base font gets the horizontal glyphs of the first 28,705
+   words, then their vertical glyphs (names `fu…` and `fv…`, so none is drawn twice); the base glyphs, kanji and
+   both sets of furigana kana are shared. The lookup list is the base font's, then the vertical words,
+   okurigana and kanji lookups, the horizontal ones, the vertical hide lookups (N5 to N1, then off-list words)
+   and the horizontal ones. Each direction keeps its own order. `calt` holds the horizontal rules and
+   `vert`/`vrt2` the vertical ones, so each fires in its own direction only; `ss05` to `ss01` list the hide
+   lookups of both directions, and `ss10` the vertical ones, but a hide lookup only matches its own
+   direction's glyphs, so in each direction the other set's lookups find nothing to do. Should a page force
+   `calt` on in vertical text, the vertical words are already formed when the horizontal lookups run, and the
+   vertical hides run after both, so the text still shapes as in Dandan Vertical.
+   The ascender and descender are Dandan's, and `vhea`'s ascender covers the vertical readings.
 
 The [How it works](https://dandan.alexvolkihar.ovh/#how) section of the website walks through the same steps.
 [DATA_SOURCES.md](DATA_SOURCES.md) lists every input with its version and licence.
@@ -214,9 +269,9 @@ The [How it works](https://dandan.alexvolkihar.ovh/#how) section of the website 
   日本 at N3 and leave 日本語 out, for example, so 日本語 keeps its reading even with `ss01`.
 - **Size.** About 1.8 MB of WOFF2 for the full dictionary. `--dictionary common` (about 1.3 MB) or
   `--max-words` give a smaller file.
-- **One font per direction.** Shapers skip `calt` in vertical writing, so Dandan stays plain in
-  `writing-mode: vertical-rl`; Dandan Vertical covers vertical text, and stays plain in horizontal text. A page
-  that mixes both loads two fonts. Vertical readings are condensed along the word when they are longer than it
+- **One font per direction, or half the words.** Shapers skip `calt` in vertical writing, so Dandan stays plain
+  in `writing-mode: vertical-rl`; Dandan Vertical covers vertical text, and stays plain in horizontal text. A
+  page that mixes both loads the two fonts, or Dandan Duo, which annotates half as many words per direction. Vertical readings are condensed along the word when they are longer than it
   (状況: じょうきょう), as horizontal ones are across it; nothing lets them overhang the kana around them.
   Only Chromium was checked in a browser.
 - **Coverage.** Kanji outside JIS X 0208 (plus 𠮟, 塡, 剝, 頰) are not in the font, and words using them get
@@ -227,7 +282,7 @@ The [How it works](https://dandan.alexvolkihar.ovh/#how) section of the website 
 [`site/`](site) is the landing page at [dandan.alexvolkihar.ovh](https://dandan.alexvolkihar.ovh): a static
 Vue 3 + Vite site with the level staircase, a playground, the switches and the downloads. It follows the
 system theme and has a light/dark toggle. The playground switches to vertical text, and only then fetches
-Dandan Vertical.
+Dandan Vertical. The downloads offer the three fonts.
 
 <p>
   <img src="docs/images/hero-light.png" alt="Website hero in the light theme: title, three annotated sentences, the JLPT staircase and the furigana switch" width="49%">
@@ -239,7 +294,7 @@ Dandan Vertical.
 ```sh
 cd site
 pnpm install
-pnpm fonts   # copy ../dist/Dandan*.woff2, *.ttf and ../OFL.txt into public/fonts (build both fonts first)
+pnpm fonts   # copy ../dist/Dandan*.woff2, *.ttf and ../OFL.txt into public/fonts (build the three fonts first)
 pnpm dev     # local dev server
 pnpm build   # static output in site/dist
 ```
@@ -268,7 +323,7 @@ permissions and the limits; [extension/PRIVACY.md](extension/PRIVACY.md) is the 
 .venv/bin/python -m pytest
 ```
 
-The 30 tests check the dictionary compiler and run HarfBuzz (uharfbuzz) on the fonts in `dist/`, building them
+The 44 tests check the dictionary compiler and run HarfBuzz (uharfbuzz) on the fonts in `dist/`, building them
 into a temporary directory when needed: 今日 is one annotated ligature, 日本語 beats 日本, an N5 word is bare in
 the N5 build and annotated in `all`, `ss05` and `ss03` hide levels at run time, `calt` off leaves text bare,
 okurigana readings sit over the kanji only, Dandan leaves vertical text alone, and the glyph count stays under
@@ -276,9 +331,17 @@ okurigana readings sit over the kanji only, Dandan leaves vertical text alone, a
 its kanji's, sets the reading right of the column with ょ in its vertical form, hides levels with `ss05` and
 `ss03` and every reading with `ss10`, still turns 。 and ー, and leaves horizontal text bare.
 
+The Dandan Duo tests build Dandan and Dandan Vertical capped at the Duo's 28,705 words per direction, then shape
+25 sentences with 14 feature settings (no features, `ss05` to `ss01`, `ss10`, `calt`, `vert` and `liga` off,
+and combinations) in both directions: the Duo's glyphs, clusters, advances and offsets must match Dandan's in
+horizontal text and Dandan Vertical's in top-to-bottom text. They also check that each direction only ever
+produces its own glyphs, that the two directions split the glyph budget, and that the line metrics are Dandan's.
+They compare the `all` and `N4` builds; `DANDAN_PARITY_LEVELS=all,N5,N4,N3,N2,N1` compares every level.
+
 `scripts/render.py docs/sample.html docs/sample.png 1000x620` renders [a sample page](docs/sample.png) with
 headless Chrome, to check what a browser draws; `scripts/render.py docs/vertical.html docs/images/vertical.png
-1240x500` does the same for [the vertical one](docs/images/vertical.png).
+1240x500` does the same for [the vertical one](docs/images/vertical.png), and `scripts/render.py docs/duo.html
+docs/images/duo.png 1140x500` for [Dandan Duo](docs/images/duo.png).
 
 ## CI and deployment
 
@@ -286,7 +349,8 @@ headless Chrome, to check what a browser draws; `scripts/render.py docs/vertical
 
 - `site`: `pnpm install --frozen-lockfile` and `pnpm build` in `site/` (pnpm 11, Node 22);
 - `python`: on Python 3.12 and 3.14, `python -m dandan fetch` then `python -m pytest -v`, which builds the
-  three fonts the shaping tests need (`all`, `N5` and the vertical `all`). The downloaded sources are cached under a key that follows the pins in
+  fonts the shaping tests need (`all`, `N5`, the vertical `all`, the Duo `all` and `N4`, and the capped
+  references of the Duo tests). The downloaded sources are cached under a key that follows the pins in
   `dandan/fetch.py`, so a new pin downloads everything again.
 
 Vercel deploys the site on its own: every push to `master` goes live at
@@ -294,8 +358,9 @@ Vercel deploys the site on its own: every push to `master` goes live at
 Vercel project builds `site/` with `pnpm build`; the CI run is a separate check on the same commit.
 
 [`release.yml`](.github/workflows/release.yml) runs on a `v*` tag (`git tag v0.2.0 && git push origin v0.2.0`):
-it builds every level in both directions with `build-all`, runs the tests on those fonts, and attaches the WOFF2 and TTF files,
-`OFL.txt` and `NOTICE.txt` to a GitHub Release.
+it builds every level of Dandan, Dandan Vertical and Dandan Duo with `build-all`, runs the tests on those fonts
+(comparing the Duo with its references at every level), and attaches the WOFF2 and TTF files, `OFL.txt` and
+`NOTICE.txt` to a GitHub Release.
 
 ## Credits
 
