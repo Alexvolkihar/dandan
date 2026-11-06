@@ -42,7 +42,9 @@ jobs:
   python:
     name: Font builder (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The tests build Dandan, Dandan Vertical and Dandan Duo, plus the capped references
+    # the Duo parity tests compare it with: about ten builds without WOFF2.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:

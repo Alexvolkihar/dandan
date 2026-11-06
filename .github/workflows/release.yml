@@ -16,8 +16,8 @@ jobs:
   fonts:
     name: Build and publish the fonts
     runs-on: ubuntu-latest
-    # build-all makes 12 fonts (6 levels x horizontal/vertical), about 3 minutes each.
-    timeout-minutes: 90
+    # build-all makes 18 fonts (6 levels x Dandan, Dandan Vertical, Dandan Duo), about 3 minutes each.
+    timeout-minutes: 150
     permissions:
       contents: write
     steps:
@@ -48,13 +48,15 @@ jobs:
       - name: Fetch the base font and the dictionaries
         run: python -m dandan fetch
 
-      - name: Build every level
+      - name: Build every level of the three fonts
         run: python -m dandan build-all
 
+      # The Duo is compared with capped Dandan and Dandan Vertical builds at every level.
       - name: Test the built fonts
         run: python -m pytest -v
         env:
           DANDAN_DIST: dist
+          DANDAN_PARITY_LEVELS: all,N5,N4,N3,N2,N1
 
       - uses: actions/setup-node@v7
         with:
