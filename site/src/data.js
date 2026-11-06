@@ -20,6 +20,14 @@ export const VERTICAL_FONT = {
   ttfBytes: 7619188,
 }
 
+// Dandan Duo (dist/Dandan-Duo.json): both directions, 28,705 words in each. Download only.
+export const DUO_FONT = {
+  woff2: 'fonts/Dandan-Duo.woff2',
+  ttf: 'fonts/Dandan-Duo.ttf',
+  woff2Bytes: 2003528,
+  ttfBytes: 7573024,
+}
+
 // Repository URL, shown in the header and footer when set.
 export const REPO_URL = ''
 

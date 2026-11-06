@@ -156,10 +156,15 @@ const en = {
     // html
     verticalNote:
       'For <code>writing-mode: vertical-rl</code>, use Dandan Vertical: the readings sit right of each kanji, upright, as in printed tategaki. Its <code>line-height: normal</code> is 2.0, and the furigana need 2.0 or more. The stylistic sets are the same; <code>calt</code> does not apply in vertical text, so <code>"ss10" 1</code> turns every reading off.',
+    duoTitle: 'Both directions',
+    // html
+    duoNote:
+      'Dandan Duo holds both fonts\' rules: readings above the kanji in horizontal text, right of them in vertical text, switched by <code>writing-mode</code> alone. The stylistic sets work both ways; to turn every reading off, combine <code>"calt" 0</code> (horizontal) with <code>"ss10" 1</code> (vertical). Both sets of glyphs share one font\'s glyph limit, so it annotates 28,705 words per direction instead of 57,611: every JLPT and every common JMdict word, but fewer rare ones. Keep vertical lines at 2.0 or more: its <code>line-height: normal</code> is Dandan\'s 1.65.',
     downloadTitle: 'Download',
     web: 'web',
     desktop: 'desktop',
     vertical: 'vertical',
+    both: 'both directions',
     // html
     downloadNote:
       'Regular weight, every level switchable at run time. Licences: <a href="fonts/OFL.txt">OFL.txt</a> for the font and <a href="fonts/NOTICE.txt">NOTICE.txt</a> for the reading data (CC BY-SA 4.0).',
@@ -190,8 +195,8 @@ const en = {
         body: 'When a line wraps inside 提案, each half is shaped alone and may get a reading of its own. word-break: auto-phrase (Chromium, with lang="ja") breaks between phrases instead.',
       },
       {
-        title: 'Two files, hiragana, JIS X 0208.',
-        body: 'Vertical text needs its own font, Dandan Vertical: Dandan itself stays plain there, since shapers skip calt in vertical writing. Readings are hiragana only, one weight per build, and words with kanji outside JIS X 0208 (plus 𠮟, 塡, 剝, 頰) get none.',
+        title: 'One font per direction (or Duo), hiragana, JIS X 0208.',
+        body: 'Dandan stays plain in vertical text, since shapers skip calt in vertical writing: vertical text needs Dandan Vertical, or Dandan Duo, which covers both directions with fewer rare words. Readings are hiragana only, one weight per build, and words with kanji outside JIS X 0208 (plus 𠮟, 塡, 剝, 頰) get none.',
       },
     ],
   },

@@ -1,5 +1,5 @@
 <script setup>
-import { FONT, LADDER, VERTICAL_FONT, mebibytes } from '../data.js'
+import { DUO_FONT, FONT, LADDER, VERTICAL_FONT, mebibytes } from '../data.js'
 import { useI18n } from '../i18n/index.ts'
 import CodeBlock from './CodeBlock.vue'
 
@@ -39,6 +39,21 @@ const verticalCode = `@font-face {
 
 .tate.plain { font-feature-settings: "ss10" 1; }  /* no furigana */`
 
+const duoCode = `@font-face {
+  font-family: "Dandan Duo";
+  src: url("Dandan-Duo.woff2") format("woff2");
+  font-display: swap;
+}
+
+.jp      { font-family: "Dandan Duo", sans-serif; line-height: 1.8; }
+.jp.tate { writing-mode: vertical-rl; line-height: 2.1; }  /* 2.0 or more */
+
+/* Same stylistic sets in both directions */
+.knows-n4 { font-feature-settings: "ss04" 1; }
+
+/* No furigana: calt off across, ss10 down */
+.plain { font-feature-settings: "calt" 0, "ss10" 1; }`
+
 const htmlCode = `<p lang="ja" class="jp knows-n4">経済の状況は複雑だが、政府は対策を検討している。</p>`
 
 const cliCode = `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -46,7 +61,8 @@ const cliCode = `python3 -m venv .venv && .venv/bin/pip install -r requirements.
 .venv/bin/python -m dandan build      # dist/Dandan.ttf, .woff2, .json
 .venv/bin/python -m dandan build --level N4 --family "Dandan N4"
 .venv/bin/python -m dandan build --orientation vertical   # Dandan Vertical
-.venv/bin/python -m dandan build-all  # all, N5 ... N1, horizontal and vertical
+.venv/bin/python -m dandan build --orientation both       # Dandan Duo
+.venv/bin/python -m dandan build-all  # all, N5 ... N1, of all three fonts
 .venv/bin/python -m dandan build --dictionary common   # about 1.3 MB`
 
 // One row per switch; what each hides is in src/i18n (use.rows), in this order.
@@ -96,6 +112,9 @@ const mb = bytes => t('common.mb', mebibytes(bytes, locale.value))
           <h3 class="sub">{{ t('use.verticalTitle') }}</h3>
           <CodeBlock :code="verticalCode" label="vertical.css" />
           <p class="small" v-html="t('use.verticalNote')" />
+          <h3 class="sub">{{ t('use.duoTitle') }}</h3>
+          <CodeBlock :code="duoCode" label="duo.css" />
+          <p class="small" v-html="t('use.duoNote')" />
         </div>
         <div class="col">
           <h3>{{ t('use.buildTitle') }}</h3>
@@ -123,6 +142,16 @@ const mb = bytes => t('common.mb', mebibytes(bytes, locale.value))
               <li>
                 <a class="btn" :href="VERTICAL_FONT.ttf" download>
                   Dandan-Vertical.ttf <small>{{ mb(VERTICAL_FONT.ttfBytes) }} · {{ t('use.vertical') }}</small>
+                </a>
+              </li>
+              <li>
+                <a class="btn" :href="DUO_FONT.woff2" download>
+                  Dandan-Duo.woff2 <small>{{ mb(DUO_FONT.woff2Bytes) }} · {{ t('use.both') }}</small>
+                </a>
+              </li>
+              <li>
+                <a class="btn" :href="DUO_FONT.ttf" download>
+                  Dandan-Duo.ttf <small>{{ mb(DUO_FONT.ttfBytes) }} · {{ t('use.both') }}</small>
                 </a>
               </li>
             </ul>

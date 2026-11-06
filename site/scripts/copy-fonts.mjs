@@ -1,5 +1,5 @@
 // Copy the built fonts (../dist) and their licence into public/fonts.
-// Run after `python -m dandan build` and `python -m dandan build --orientation vertical`.
+// Run after `python -m dandan build`, `build --orientation vertical` and `build --orientation both`.
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,11 +14,13 @@ const files = [
   [join(root, 'dist', 'Dandan.ttf'), 'Dandan.ttf'],
   [join(root, 'dist', 'Dandan-Vertical.woff2'), 'Dandan-Vertical.woff2'],
   [join(root, 'dist', 'Dandan-Vertical.ttf'), 'Dandan-Vertical.ttf'],
+  [join(root, 'dist', 'Dandan-Duo.woff2'), 'Dandan-Duo.woff2'],
+  [join(root, 'dist', 'Dandan-Duo.ttf'), 'Dandan-Duo.ttf'],
   [join(root, 'OFL.txt'), 'OFL.txt'],
 ]
 for (const [from, name] of files) {
   if (!existsSync(from)) {
-    console.error(`missing ${from}: build the fonts first (.venv/bin/python -m dandan build, then build --orientation vertical)`)
+    console.error(`missing ${from}: build the fonts first (.venv/bin/python -m dandan build, then build --orientation vertical and build --orientation both)`)
     process.exit(1)
   }
   copyFileSync(from, join(out, name))

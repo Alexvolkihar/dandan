@@ -149,10 +149,15 @@ const fr: Messages = {
     // html
     verticalNote:
       'Pour <code>writing-mode: vertical-rl</code>, prenez Dandan Vertical : les lectures se placent à droite de chaque kanji, debout, comme dans le tategaki imprimé. Son <code>line-height: normal</code> vaut 2,0, et les furigana demandent 2,0 ou plus. Les jeux stylistiques sont les mêmes ; <code>calt</code> ne s’applique pas en vertical, c’est donc <code>"ss10" 1</code> qui retire toutes les lectures.',
+    duoTitle: 'Les deux sens',
+    // html
+    duoNote:
+      'Dandan Duo réunit les règles des deux polices : lectures au-dessus des kanji en texte horizontal, à leur droite en texte vertical, selon le seul <code>writing-mode</code>. Les jeux stylistiques marchent dans les deux sens ; pour retirer toutes les lectures, combinez <code>"calt" 0</code> (horizontal) et <code>"ss10" 1</code> (vertical). Les deux jeux de glyphes se partagent la limite de glyphes d’une police : elle annote donc 28 705 mots par sens au lieu de 57 611, soit tous les mots JLPT et tous les mots courants de JMdict, mais moins de mots rares. Gardez un interligne de 2,0 ou plus en vertical : son <code>line-height: normal</code> est celui de Dandan, 1,65.',
     downloadTitle: 'Télécharger',
     web: 'web',
     desktop: 'bureau',
     vertical: 'vertical',
+    both: 'deux sens',
     downloadNote:
       'Graisse Regular, chaque niveau activable à l’usage. Licences : <a href="fonts/OFL.txt">OFL.txt</a> pour la police et <a href="fonts/NOTICE.txt">NOTICE.txt</a> pour les données de lecture (CC BY-SA 4.0).',
   },
@@ -182,8 +187,8 @@ const fr: Messages = {
         body: 'Si une ligne se coupe au milieu de 提案, chaque moitié est mise en forme seule et peut recevoir sa propre lecture. word-break: auto-phrase (Chromium, avec lang="ja") coupe plutôt entre les groupes de mots.',
       },
       {
-        title: 'Deux fichiers, hiragana, JIS X 0208.',
-        body: 'Le texte vertical demande sa propre police, Dandan Vertical : Dandan y reste nue, car les moteurs de rendu ignorent calt en écriture verticale. Les lectures sont uniquement en hiragana, avec une seule graisse par compilation, et les mots contenant un kanji hors JIS X 0208 (ainsi que 𠮟, 塡, 剝, 頰) n’en reçoivent aucune.',
+        title: 'Une police par sens (ou Duo), hiragana, JIS X 0208.',
+        body: 'Dandan reste nue en texte vertical, car les moteurs de rendu ignorent calt en écriture verticale : le vertical demande Dandan Vertical, ou Dandan Duo, qui couvre les deux sens avec moins de mots rares. Les lectures sont uniquement en hiragana, avec une seule graisse par compilation, et les mots contenant un kanji hors JIS X 0208 (ainsi que 𠮟, 塡, 剝, 頰) n’en reçoivent aucune.',
       },
     ],
   },
