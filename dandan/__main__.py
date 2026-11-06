@@ -42,9 +42,10 @@ def _run_build(args: argparse.Namespace, level: str, family: str | None, orienta
     )
     for kind, path in result.files.items():
         print(f"{result.family} [{kind}] {path} ({path.stat().st_size / 1024:.0f} KiB)")
+    words = " + ".join(f"{count} {direction}" for direction, count in result.words.items())
     print(
-        f"  glyphs: {result.total_glyphs} = {result.base_glyphs} base + {result.annotated} annotated "
-        f"(budget {result.budget}); ascender {result.ascender}, descender {result.descender}"
+        f"  glyphs: {result.total_glyphs} = {result.base_glyphs} base + {words} annotated "
+        f"(budget {result.budget} per direction); ascender {result.ascender}, descender {result.descender}"
     )
 
 
@@ -65,21 +66,24 @@ def main(argv: list[str] | None = None) -> int:
         "--orientation",
         choices=ORIENTATIONS,
         default="horizontal",
-        help="horizontal: furigana above the kanji (calt); vertical: a separate font for vertical text, "
-        "furigana right of the kanji (vert, vrt2)",
+        help="horizontal: Dandan, furigana above the kanji (calt); vertical: Dandan Vertical, furigana right "
+        "of the kanji in vertical text (vert, vrt2); both: Dandan Duo, each in its own direction, with half "
+        "as many words per direction",
     )
     one.add_argument(
         "--family",
-        help='font family name (default: "Dandan", "Dandan <level>", "Dandan Vertical" or "Dandan Vertical <level>")',
+        help='font family name (default: "Dandan", "Dandan Vertical" or "Dandan Duo", plus " <level>")',
     )
     _add_build_options(one)
 
-    every = commands.add_parser("build-all", help="build the font for every level, horizontal and vertical")
+    every = commands.add_parser(
+        "build-all", help="build the font for every level: Dandan, Dandan Vertical and Dandan Duo"
+    )
     every.add_argument(
         "--orientation",
-        choices=(*ORIENTATIONS, "both"),
-        default="both",
-        help="which fonts to build (default: both)",
+        choices=(*ORIENTATIONS, "all"),
+        default="all",
+        help="which fonts to build: one orientation (both = Dandan Duo) or all three (default: all)",
     )
     _add_build_options(every)
 
@@ -90,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "build":
         _run_build(args, args.level, args.family, args.orientation)
     else:
-        orientations = ORIENTATIONS if args.orientation == "both" else (args.orientation,)
+        orientations = ORIENTATIONS if args.orientation == "all" else (args.orientation,)
         for orientation in orientations:
             for level in LEVEL_NAMES:
                 _run_build(args, level, None, orientation)

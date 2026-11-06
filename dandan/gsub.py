@@ -23,6 +23,10 @@ horizontal text only, so the font annotates vertical text and leaves
 horizontal text plain. ``calt`` off cannot switch furigana off there, so the
 vertical build adds ``ss10``, which hides every reading (a fifth hide lookup
 covers the words on no JLPT list).
+
+Dandan Duo (``--orientation both``) carries both sets: the horizontal lookups
+on ``calt`` and the vertical ones on ``vert``/``vrt2``, each over its own
+glyphs, so the shaper picks the right set from the text's direction.
 """
 
 from __future__ import annotations
@@ -139,12 +143,17 @@ VERTICAL_FEATURES = ("vert", "vrt2")
 HIDE_ALL = "ss10"
 
 
-def install(font: TTFont, rules: Rules, baked_levels: list[int], vertical: bool = False) -> dict[str, list[int]]:
-    """Append the furigana lookups and features to the font's GSUB."""
-    gsub = font["GSUB"].table
-    lookups = gsub.LookupList.Lookup
-    glyph_map = font.getReverseGlyphMap()
+@dataclass
+class _Installed:
+    """Lookup indices of one direction's rules."""
 
+    annotate: list[int]
+    hide: dict[int, int]
+    unlisted: int | None
+
+
+def _append_annotate(lookups: list[ot.Lookup], rules: Rules, glyph_map: dict[str, int]) -> list[int]:
+    """Append one direction's words, okurigana and kanji lookups; return the indices its feature lists."""
     annotate: list[int] = []
     lookups.append(_ligature_lookup(rules.ligatures))
     annotate.append(len(lookups) - 1)
@@ -155,37 +164,77 @@ def install(font: TTFont, rules: Rules, baked_levels: list[int], vertical: bool 
         lookups.extend(singles)
     lookups.append(_lookup([otl.buildSingleSubstSubtable(rules.lone)], 1))
     annotate.append(len(lookups) - 1)
+    return annotate
 
-    hide_index: dict[int, int] = {}
+
+def _append_hide(lookups: list[ot.Lookup], rules: Rules, vertical: bool) -> tuple[dict[int, int], int | None]:
+    """Append one direction's hide lookups (and, vertical, the off-list one)."""
+    hide: dict[int, int] = {}
     for level in LEVELS:
         mapping = rules.hide[level]
         if mapping:
             lookups.append(_lookup([otl.buildMultipleSubstSubtable(mapping)], 2))
-            hide_index[level] = len(lookups) - 1
-    unlisted_index = None
+            hide[level] = len(lookups) - 1
+    unlisted = None
     if vertical and rules.unlisted:
         lookups.append(_multiple_lookup(rules.unlisted))
-        unlisted_index = len(lookups) - 1
-    gsub.LookupList.LookupCount = len(lookups)
+        unlisted = len(lookups) - 1
+    return hide, unlisted
 
-    default = annotate + [hide_index[lv] for lv in baked_levels if lv in hide_index]
+
+def install(
+    font: TTFont, baked_levels: list[int], horizontal: Rules | None = None, vertical: Rules | None = None
+) -> dict[str, list[int]]:
+    """Append the furigana lookups and features to the font's GSUB.
+
+    With both rule sets (Dandan Duo) the lookup list runs: vertical annotate,
+    horizontal annotate, vertical hide, horizontal hide. Each direction keeps
+    its own order, and their glyphs are disjoint: each set is reached only
+    through its own direction's feature (``calt`` or ``vert``), and the
+    stylistic sets list the hide lookups of both, of which only the current
+    direction's find anything. Should a page force ``calt`` on in vertical text,
+    the vertical words are already formed when the horizontal lookups run, and
+    the vertical hide lookups run after both, so the text still shapes as in
+    Dandan Vertical.
+    """
+    if horizontal is None and vertical is None:
+        raise ValueError("install needs horizontal rules, vertical rules or both")
+    gsub = font["GSUB"].table
+    lookups = gsub.LookupList.Lookup
+    glyph_map = font.getReverseGlyphMap()
+    sets: list[tuple[Rules, bool]] = []  # (rules, vertical), vertical first
+    if vertical is not None:
+        sets.append((vertical, True))
+    if horizontal is not None:
+        sets.append((horizontal, False))
+    annotate = [_append_annotate(lookups, rules, glyph_map) for rules, _ in sets]
+    hides = [_append_hide(lookups, rules, is_vertical) for rules, is_vertical in sets]
+    gsub.LookupList.LookupCount = len(lookups)
+    installed = [_Installed(a, h, u) for a, (h, u) in zip(annotate, hides)]
+    down = installed[0] if vertical is not None else None
+    across = installed[-1] if horizontal is not None else None
+
+    def baked(i: _Installed) -> list[int]:
+        return i.annotate + [i.hide[lv] for lv in baked_levels if lv in i.hide]
+
     features: dict[str, list[int]] = {}
     records = []
-    if vertical:
+    if across is not None:
+        features["calt"] = baked(across)
+        records.append(_feature("calt", features["calt"]))
+    if down is not None:
         for tag in VERTICAL_FEATURES:
-            features[tag] = default
-            if not _extend_features(gsub, tag, default):
-                records.append(_feature(tag, default))
-    else:
-        features["calt"] = default
-        records.append(_feature("calt", default))
+            features[tag] = baked(down)
+            if not _extend_features(gsub, tag, features[tag]):
+                records.append(_feature(tag, features[tag]))
     for level in LEVELS:
         tag = f"ss0{level}"
-        features[tag] = [hide_index[lv] for lv in LEVELS if lv >= level and lv in hide_index]
+        features[tag] = sorted(i.hide[lv] for i in installed for lv in LEVELS if lv >= level and lv in i.hide)
         label = "Hide furigana of N5 words" if level == 5 else f"Hide furigana of N5-N{level} words"
         records.append(_feature(tag, features[tag], _stylistic_set_params(font, label)))
-    if vertical:
-        features[HIDE_ALL] = sorted(hide_index.values()) + ([unlisted_index] if unlisted_index is not None else [])
+    if down is not None:
+        # Only the vertical rules need it: calt off already hides every horizontal reading.
+        features[HIDE_ALL] = sorted(down.hide.values()) + ([down.unlisted] if down.unlisted is not None else [])
         records.append(_feature(HIDE_ALL, features[HIDE_ALL], _stylistic_set_params(font, "Hide all furigana")))
     _add_features(gsub, records)
     font["OS/2"].usMaxContext = maxCtxFont(font)

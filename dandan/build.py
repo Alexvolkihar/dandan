@@ -21,7 +21,8 @@ MAX_GLYPHS = 65535
 RESERVE = 64
 
 LEVEL_NAMES = {"N5": 5, "N4": 4, "N3": 3, "N2": 2, "N1": 1, "all": 6}
-ORIENTATIONS = ("horizontal", "vertical")
+# "both" is Dandan Duo: the horizontal and the vertical glyphs and rules in one font.
+ORIENTATIONS = ("horizontal", "vertical", "both")
 
 # Lone kanji kept bare even when the dictionary agrees on a reading: they are
 # mostly counters after digits (3日, 5本, 2時) whose reading changes there.
@@ -40,14 +41,17 @@ class BuildResult:
     family: str
     files: dict[str, Path]
     base_glyphs: int
-    budget: int
+    budget: int  # annotated glyphs allowed per direction
     candidates: int
-    annotated: int
+    annotated: int  # annotated glyphs, both directions together
     total_glyphs: int
     first_annotated_gid: int
     ascender: int
     descender: int
     features: dict[str, list[int]]
+    # Per direction ("horizontal", "vertical"): its annotated glyphs and the id of the first one.
+    words: dict[str, int]
+    first_gids: dict[str, int]
 
 
 def _known_levels(level: str) -> list[int]:
@@ -85,9 +89,12 @@ def _postscript_name(family: str) -> str:
     return re.sub(r"[^A-Za-z0-9-]", "", family.replace(" ", "")) + "-Regular"
 
 
+FAMILIES = {"horizontal": "Dandan", "vertical": "Dandan Vertical", "both": "Dandan Duo"}
+
+
 def default_family(level: str, orientation: str = "horizontal") -> str:
-    """Dandan, Dandan N4, Dandan Vertical, Dandan Vertical N4."""
-    family = "Dandan Vertical" if orientation == "vertical" else "Dandan"
+    """Dandan, Dandan N4, Dandan Vertical, Dandan Vertical N4, Dandan Duo, Dandan Duo N4."""
+    family = FAMILIES[orientation]
     return family if level == "all" else f"{family} {level}"
 
 
@@ -106,6 +113,12 @@ def _set_names(font: TTFont, family: str, level: str, orientation: str = "horizo
         description = (
             "Japanese font for vertical text (tategaki) with JLPT-level-aware furigana set right of the "
             "kanji by OpenType ligatures. Readings come from JMdict and JmdictFurigana (CC BY-SA 4.0)."
+        )
+    elif orientation == "both":
+        description = (
+            "Japanese font with JLPT-level-aware furigana drawn by OpenType ligatures, above the kanji in "
+            "horizontal text and right of them in vertical text (tategaki). Readings come from JMdict and "
+            "JmdictFurigana (CC BY-SA 4.0)."
         )
     values = {
         0: copyright_text,
@@ -144,11 +157,10 @@ def _referenced_name_ids(font: TTFont) -> set[int]:
     return ids
 
 
-def _set_metrics(font: TTFont, first: int) -> tuple[int, int]:
-    """Raise the ascender so that the furigana fit inside the line."""
+def _set_metrics(font: TTFont, glyphs: list[str]) -> tuple[int, int]:
+    """Raise the ascender so that the furigana of these (horizontal) glyphs fit inside the line."""
     glyf = font["glyf"]
-    order = font.getGlyphOrder()
-    top = max((getattr(glyf[name], "yMax", 0) for name in order[first:]), default=0)
+    top = max((getattr(glyf[name], "yMax", 0) for name in glyphs), default=0)
     ascender = max(font["hhea"].ascent, ((top + 20 + 9) // 10) * 10)
     descender = font["hhea"].descent  # negative
     hhea, os2 = font["hhea"], font["OS/2"]
@@ -159,7 +171,19 @@ def _set_metrics(font: TTFont, first: int) -> tuple[int, int]:
     return ascender, descender
 
 
-def _set_vertical_metrics(font: TTFont, first: int) -> tuple[int, int]:
+def _vertical_reach(font: TTFont, glyphs: list[str]) -> int:
+    """How far right of a vertical line's centre these (vertical) glyphs reach."""
+    glyf, hmtx = font["glyf"], font["hmtx"]
+    return int(max((getattr(glyf[n], "xMax", 0) - hmtx[n][0] / 2 for n in glyphs), default=0))
+
+
+def _set_vhea(font: TTFont, reach: int) -> None:
+    """vhea's ascender (centre line to the right edge) covers the vertical furigana."""
+    vhea = font["vhea"]
+    vhea.ascent = max(vhea.ascent, ((reach + 9) // 10) * 10)
+
+
+def _set_vertical_metrics(font: TTFont, glyphs: list[str]) -> tuple[int, int]:
     """Make room for the furigana column on both sides of a vertical line.
 
     Browsers centre a vertical line on the ideographic em box (y -120 to 880)
@@ -168,10 +192,8 @@ def _set_vertical_metrics(font: TTFont, first: int) -> tuple[int, int]:
     the normal line then leaves that reach free on each side. vhea's ascender
     (centre line to the right edge) covers the furigana as well.
     """
-    glyf, hmtx = font["glyf"], font["hmtx"]
-    order = font.getGlyphOrder()
-    reach = max((getattr(glyf[n], "xMax", 0) - hmtx[n][0] / 2 for n in order[first:]), default=0)
-    half = ((int(reach) + VERTICAL_MARGIN + 9) // 10) * 10
+    reach = _vertical_reach(font, glyphs)
+    half = ((reach + VERTICAL_MARGIN + 9) // 10) * 10
     os2 = font["OS/2"]
     centre = (os2.sTypoAscender + os2.sTypoDescender) // 2  # the base font's typo metrics are the em box
     ascender, descender = centre + half, centre - half
@@ -180,9 +202,49 @@ def _set_vertical_metrics(font: TTFont, first: int) -> tuple[int, int]:
     os2.sTypoAscender, os2.sTypoDescender, os2.sTypoLineGap = ascender, descender, 0
     os2.usWinAscent, os2.usWinDescent = ascender, -descender
     os2.fsSelection |= 1 << 7  # USE_TYPO_METRICS
-    vhea = font["vhea"]
-    vhea.ascent = max(vhea.ascent, ((int(reach) + 9) // 10) * 10)
+    _set_vhea(font, reach)
     return ascender, descender
+
+
+def _annotate(
+    drawer: Drawer, candidates: list[Annotation], budget: int, prefix: str
+) -> tuple[Rules, list[str], list[str]]:
+    """Draw the first ``budget`` placeable candidates; return their rules, glyph names and the skipped runs."""
+    vertical = isinstance(drawer, VerticalDrawer)
+    # In vertical text the base font's vert lookups run first, so a kana after
+    # a kanji is already in its vertical form when the okurigana rules look at it.
+    next_forms = drawer.vert if isinstance(drawer, VerticalDrawer) else {}
+    rules = Rules()
+    names: list[str] = []
+    skipped: list[str] = []
+    for annotation in candidates:
+        if len(names) >= budget:
+            break
+        lone = len(annotation.run) == 1
+        if lone and annotation.run in BARE_LONE and not annotation.contexts:
+            continue
+        name = f"{prefix}{len(names):05d}"
+        base = drawer.draw(annotation, name)
+        if base is None:
+            skipped.append(annotation.run)
+            continue
+        names.append(name)
+        if not lone:
+            rules.ligatures[tuple(base)] = name
+        else:
+            if annotation.default and annotation.run not in BARE_LONE:
+                rules.lone[base[0]] = name
+            for context in annotation.contexts:
+                next_glyph = drawer.cmap.get(ord(context))
+                if next_glyph is not None:
+                    next_glyph = next_forms.get(next_glyph, next_glyph)
+                    rules.contextual.setdefault(base[0], {})[next_glyph] = name
+        if annotation.level is not None:
+            rules.hide[annotation.level][name] = base
+        elif vertical:
+            rules.unlisted[name] = base
+    drawer.commit()
+    return rules, names, skipped
 
 
 def build(
@@ -201,68 +263,53 @@ def build(
         raise ValueError(f"unknown level {level!r}; expected one of {', '.join(LEVEL_NAMES)}")
     if orientation not in ORIENTATIONS:
         raise ValueError(f"unknown orientation {orientation!r}; expected one of {', '.join(ORIENTATIONS)}")
-    vertical = orientation == "vertical"
+    directions = ("horizontal", "vertical") if orientation == "both" else (orientation,)
     family = family or default_family(level, orientation)
     log = lambda message: print(message, file=sys.stderr)  # noqa: E731
 
     annotations, report = load_dictionary(include_uncommon)
-    font = load_base(weight, furigana_weight, vertical)
+    font = load_base(weight, furigana_weight, "vertical" in directions)
     base_glyphs = len(font.getGlyphOrder())
-    budget = MAX_GLYPHS - RESERVE - base_glyphs
+    available = MAX_GLYPHS - RESERVE - base_glyphs
+    # Dandan Duo draws every word twice, once per direction, so each direction gets half the glyphs.
+    budget = available // len(directions)
     if max_words is not None:
         budget = min(budget, max_words)
     candidates = [a for a in annotations if a.default or a.contexts]
     candidates.sort(key=_priority)
     log(f"glyph budget: {MAX_GLYPHS} max - {base_glyphs} base glyphs - {RESERVE} reserved = "
-        f"{MAX_GLYPHS - RESERVE - base_glyphs} annotated glyphs available")
+        f"{available} annotated glyphs available, {budget} per direction")
     log(f"dictionary: {len(candidates)} candidate glyphs ({len(report['ambiguous'])} ambiguous runs left bare)")
 
-    drawer = VerticalDrawer(font, layout) if vertical else Drawer(font, layout)
-    # In vertical text the base font's vert lookups run first, so a kana after
-    # a kanji is already in its vertical form when the okurigana rules look at it.
-    next_forms = drawer.vert if isinstance(drawer, VerticalDrawer) else {}
-    rules = Rules()
-    known = _known_levels(level)
-    annotated = 0
+    rules: dict[str, Rules] = {}
+    glyphs: dict[str, list[str]] = {}
+    first_gids: dict[str, int] = {}
     skipped: list[str] = []
-    for annotation in candidates:
-        if annotated >= budget:
-            break
-        lone = len(annotation.run) == 1
-        if lone and annotation.run in BARE_LONE and not annotation.contexts:
-            continue
-        name = f"fu{annotated:05d}"
-        base = drawer.draw(annotation, name)
-        if base is None:
-            skipped.append(annotation.run)
-            continue
-        annotated += 1
-        if not lone:
-            rules.ligatures[tuple(base)] = name
-        else:
-            if annotation.default and annotation.run not in BARE_LONE:
-                rules.lone[base[0]] = name
-            for context in annotation.contexts:
-                next_glyph = drawer.cmap.get(ord(context))
-                if next_glyph is not None:
-                    next_glyph = next_forms.get(next_glyph, next_glyph)
-                    rules.contextual.setdefault(base[0], {})[next_glyph] = name
-        if annotation.level is not None:
-            rules.hide[annotation.level][name] = base
-        elif vertical:
-            rules.unlisted[name] = base
-    drawer.commit()
+    for direction in directions:
+        # One drawer at a time: each copies the glyph order and commits it back when done.
+        first_gids[direction] = len(font.getGlyphOrder())
+        drawer = VerticalDrawer(font, layout) if direction == "vertical" else Drawer(font, layout)
+        # The Duo's vertical glyphs get their own prefix, so no name is drawn twice.
+        prefix = "fv" if direction == "vertical" and len(directions) == 2 else "fu"
+        rules[direction], glyphs[direction], missed = _annotate(drawer, candidates, budget, prefix)
+        skipped += missed
+    annotated = sum(len(names) for names in glyphs.values())
     first = base_glyphs
     total = len(font.getGlyphOrder())
     if total > MAX_GLYPHS:
         raise RuntimeError(f"{total} glyphs exceed the OpenType limit of {MAX_GLYPHS}")
-    log(f"annotated glyphs: {annotated} (cap {budget}); total glyphs: {total}")
+    words = {direction: len(names) for direction, names in glyphs.items()}
+    log(f"annotated glyphs: {words} (cap {budget} per direction); total glyphs: {total}")
 
-    features = install(font, rules, known, vertical)
-    if vertical:
-        ascender, descender = _set_vertical_metrics(font, first)
+    features = install(font, _known_levels(level), rules.get("horizontal"), rules.get("vertical"))
+    if "horizontal" in directions:
+        # Dandan Duo keeps Dandan's line metrics, so horizontal text sits exactly as in Dandan;
+        # vertical lines are centred on the em box whatever the ascender, and vhea covers the readings.
+        ascender, descender = _set_metrics(font, glyphs["horizontal"])
+        if "vertical" in directions:
+            _set_vhea(font, _vertical_reach(font, glyphs["vertical"]))
     else:
-        ascender, descender = _set_metrics(font, first)
+        ascender, descender = _set_vertical_metrics(font, glyphs["vertical"])
     _set_names(font, family, level, orientation)
     font["post"].formatType = 3.0
     font["post"].extraNames, font["post"].mapping = [], {}
@@ -296,6 +343,8 @@ def build(
         ascender=ascender,
         descender=descender,
         features=features,
+        words=words,
+        first_gids=first_gids,
     )
     manifest = {k: (str(v) if isinstance(v, Path) else v) for k, v in result.__dict__.items()}
     manifest["files"] = {k: str(v) for k, v in files.items()}
